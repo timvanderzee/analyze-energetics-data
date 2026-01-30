@@ -1,0 +1,67 @@
+clear all; close all; clc
+
+cd('C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\data_29_01_2026\Nexus')
+
+for k = 1
+    if k == 1
+        filename = 'P1_ROM.c3d';
+    else
+        filename = 'P1_ROM01.c3d';
+    end
+    
+    data = ezc3dRead(filename);
+    
+    % Check available analog channels
+    analogLabels = data.parameters.ANALOG.LABELS.DATA;
+    
+    % Read analog data
+    analogData = data.data.analogs;  % [samples × channels]
+    
+    %%
+    signals_of_interest = {'Voltage.2','Angle.Angle', 'Torque.Torque'};
+    
+    for i = 1:length(signals_of_interest)
+        for j = 1:length(analogLabels)
+            if strcmp(analogLabels{j}, signals_of_interest(i))
+                id(i) = j;
+            end
+        end
+    end
+    
+    %% figure 1: time series
+    fs = 1000;
+    dt = 1/fs;
+    N = length(analogData);
+    t = 0:dt:(N-1)*dt;
+    
+    for i = 1:length(id)
+        figure(1)
+        subplot(3,1,i)
+        plot(t,analogData(:,id(i))); hold on
+    end
+    
+    %% baseline EMG
+    EMG = analogData(:,id(1));
+
+    [b1,a1] = butter(1, 20/(.5*fs), 'high');
+
+    EMGf = filtfilt(b1,a1, EMG);
+
+    [b2,a2] = butter(1, 5/(.5*fs), 'low');
+    EMGe = filtfilt(b2,a2,abs(EMGf));
+    
+    EMGb = mean(EMGe);
+    
+    %% figure 2: versus angle series
+    
+
+    figure(2)
+    plot(analogData(:,id(2)),analogData(:,id(3)),'.'); hold on
+
+    % should improve on this
+    p = polyfit(analogData(:,id(2)),analogData(:,id(3)), 1);
+    
+    x = 0:.01:1.5;
+    plot(x, polyval(p,x),'k-')
+    
+end

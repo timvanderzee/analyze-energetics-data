@@ -1,0 +1,167 @@
+clear all; close all; clc
+
+cd('C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\data_29_01_2026\Nexus')
+
+files = {'P1_c50_3.c3d', 'P1_c100_3.c3d', 'P1_c150_3.c3d', 'P1_c200_3.c3d', 'P1_e50_3.c3d', 'P1_e100_3.c3d'};
+
+colors = lines(length(files));
+
+for kk = 1:length(files)
+data = ezc3dRead(files{kk});
+
+% Check available analog channels
+analogLabels = data.parameters.ANALOG.LABELS.DATA;
+
+% Read analog data
+analogData = data.data.analogs;  % [samples × channels]
+
+%%
+signals_of_interest = {'Voltage.2', 'Angle.Angle', 'Angular Velocity.1', 'Torque.Torque'}; 
+
+for i = 1:length(signals_of_interest)
+    for j = 1:length(analogLabels)
+        if strcmp(analogLabels{j}, signals_of_interest(i))
+            id(i) = j;
+        end
+    end
+end
+
+%% figure 1: time series
+fs = 1000;
+dt = 1/fs;
+N = length(analogData);
+t = 0:dt:(N-1)*dt;
+
+% for i = 1:length(id)
+%     figure(1)
+%     subplot(4,1,i)
+%     plot(t,analogData(:,id(i)))
+% end
+
+%% figure 2: determine frequency
+Kangle = analogData(:,id(2));
+
+[b,a] = butter(1, 1/(.5*fs), 'low');
+Kangle_filt = filtfilt(b,a,Kangle);
+
+% figure(2)
+% % subplot(412)
+% plot(t, Kangle)
+% hold on
+% plot(t, Kangle_filt)
+% Kangle_filt(t<3) = nan;
+
+% find peaks
+% figure(2)
+[pks, locs] = findpeaks(-Kangle_filt);
+% 
+% plot(t(locs), pks, 'o')
+
+%% plot in time-series
+Ts = t(locs);
+% figure(1)
+% 
+% for i = 1:length(id)
+%     for j = 1:length(Ts)
+% 
+%         subplot(4,1,i)
+%         xline(Ts(j))
+%     end
+% end
+
+%% filter EMG
+EMG = analogData(:,id(1));
+
+[b1,a1] = butter(1, 20/(.5*fs), 'high');
+
+EMGf = filtfilt(b1,a1, EMG);
+
+[b2,a2] = butter(1, 5/(.5*fs), 'low');
+EMGb = 0.0071;
+EMGe = filtfilt(b2,a2,abs(EMGf)) - EMGb;
+
+%% correct torque
+p=[   -0.0173    0.0061];
+
+Tgrav = polyval(p, analogData(:,id(2)));
+
+Tknee = analogData(:,id(4)) - Tgrav;
+
+%% calculate acceleration
+Vel = analogData(:,id(3));
+
+% [b1,a1] = butter(1, 200/(.5*fs), 'low');
+
+% Velf = filtfilt(b1,a1, Vel);
+
+Acc = grad5(Vel(:), dt);
+% Accf = grad5(Velf(:), dt);
+
+%% get data
+Data = [EMGe Kangle Vel Acc Tknee];
+
+%% calc per cycle
+Ts = t(locs);
+T = mean(diff(Ts));
+tlin = linspace(0,T, 500);
+
+cycleData = nan(length(tlin), length(Ts)-1, size(Data,2));
+
+
+for i = 1:size(Data,2)
+    for k = 1:length(Ts)-1
+        ids = t > Ts(k) & t < Ts(k+1);
+
+        cycleData(:,k,i) = interp1(t(ids) - t(find(ids,1)),Data(ids,i), tlin);
+    end
+end
+    
+
+%% figure 3: plot per cycle
+% if ishandle(3), close(3); end
+labs = {'Activation', 'Angle', 'Velocity', 'Acceleration', 'Torque'};
+
+ymins = [-.005 0 -8 -150 -.04];
+ymaxs = [.03 1.2 8 150 .06];
+
+for i = 1:size(Data,2)
+
+    figure(kk)
+    subplot(size(Data,2),1,i)
+
+    
+    plot(tlin, cycleData(:,:,i), 'color', [.9 .9 .9]); hold on
+    plot(tlin, mean(cycleData(:,:,i), 2), '-', 'linewidth', 2, 'color', colors(1,:)); hold on
+    title(labs{i})
+    ylabel(labs{i})
+    yline(0,'k--')
+    box off
+    
+    ylim([ymins(i) ymaxs(i)])
+    
+    xlim([0 T])
+end
+
+xlabel('Time (s)')
+end
+
+%% figure size
+for i = 1:kk
+    figure(i)
+    
+    set(gcf, 'units', 'normalized', 'position', [.2 .2 .3 .6], 'Name', files{i})
+    
+    
+end
+
+%% save figures
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\figures')
+
+for i = 1:kk
+    figure(i)
+    
+    exportgraphics(gcf,figname) files{i})
+    
+    
+end
+
