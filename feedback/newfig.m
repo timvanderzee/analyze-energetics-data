@@ -121,11 +121,10 @@ live_mode = handles.stream.Value;
 
 cla
 stop_time       = str2double(handles.stop_time.String);
-% scaling_voltage = str2double(handles.scale_factor.String);
 
 % target rectangle
-rectangle(handles.axes1, 'Position', [str2double(handles.xmin.String)                                   str2double(handles.ymax.String) * str2double(handles.target_min.String)/100 ...
-                                      str2double(handles.xmax.String) - str2double(handles.xmin.String) str2double(handles.ymax.String) * (str2double(handles.target_max.String)-str2double(handles.target_min.String))/100], ...
+rectangle(handles.axes1, 'Position', [str2double(handles.xmin.String)                                           str2double(handles.ymax.String) * str2double(handles.target_min.String)/100 ...
+                                      str2double(handles.stop_time.String) - str2double(handles.xmin.String)    str2double(handles.ymax.String) * (str2double(handles.target_max.String)-str2double(handles.target_min.String))/100], ...
                                       'Facecolor', [.8 1 .8], 'Edgecolor', 'none');
 
 % define a line in the plot
@@ -138,19 +137,6 @@ handles.axes1.XLim = [str2double(handles.xmin.String) str2double(handles.xmax.St
 
 grid on
 box off
-
-% scale factor
-scale_fac = [1 str2double(handles.scale_factor.String)];
-offset = [0 str2double(handles.baseline.String)];
-
-% Loop until the message box is dismissed
-k = 0;
-
-% pre-allocate 
-N = stop_time * 100;
-all_values  = nan(N,2);
-plot_values = nan(N,2);
-time        = nan(N,1);
 
 % determine channels
 if strcmp(handles.feedback_type.String{handles.feedback_type.Value}, 'EMG versus angle')
@@ -202,9 +188,17 @@ elseif strcmp(handles.feedback_type.String{handles.feedback_type.Value}, 'Torque
     ylabel('Torque')
 end
 
+% pre-allocate 
+M = stop_time * 100;
+all_values  = nan(M,imax);
+plot_values = nan(M,imax);
+time        = nan(M,1);
+
 % continue until we pas the stop_time
 tic;
 sample_time = 0;
+k = 0;
+
 while sample_time < stop_time
     
     k = k+1;
@@ -240,13 +234,18 @@ while sample_time < stop_time
                     values(DeviceOutputSubsample) = x(i,k);
                 end
             end
-
-%             if i == 2
-%                 keyboard
-%             end
             
+            % only do scaling and offset for the vertical axis
+            if i == imax
+                scale_fac   = str2double(handles.scale_factor.String);
+                offset      = str2double(handles.baseline.String);
+            else
+                scale_fac   = 1;
+                offset      = 0;
+            end
+
             % take average over subsamples
-            all_values(k,i) = (mean(values) - offset(i)) * scale_fac(i);
+            all_values(k,i) = (mean(values) - offset) * scale_fac;
             
             % optionally filter
             if handles.do_filter.Value
@@ -254,7 +253,6 @@ while sample_time < stop_time
             else
                 plot_values(1:k,i) = all_values(1:k,i);
             end
-           
         end
 
         % check the current time
@@ -290,13 +288,14 @@ while sample_time < stop_time
         set(g, 'xdata', Y1(N:end),  'ydata', Y2(N:end))
         set(m, 'xdata', Y1(k),    'ydata', Y2(k))
 
+        handles.axes1.XLim = [str2double(handles.xmin.String) str2double(handles.xmax.String)] + Y1(k);
         drawnow;
     end
 end
 
 
 disp(['max = ', num2str(max(plot_values))]);
-disp(['mean = ', num2str(mean(plot_values))]);
+disp(['mean = ', num2str(mean(plot_values, 'omitnan'))]);
 
 
 
