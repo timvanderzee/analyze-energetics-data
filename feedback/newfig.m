@@ -22,7 +22,7 @@ function varargout = newfig(varargin)
 
 % Edit the above text to modify the response to help newfig
 
-% Last Modified by GUIDE v2.5 16-Feb-2026 19:22:16
+% Last Modified by GUIDE v2.5 26-Feb-2026 11:24:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -288,7 +288,10 @@ while sample_time < stop_time
         set(g, 'xdata', Y1(N:end),  'ydata', Y2(N:end))
         set(m, 'xdata', Y1(k),    'ydata', Y2(k))
 
-        handles.axes1.XLim = [str2double(handles.xmin.String) str2double(handles.xmax.String)] + Y1(k);
+        if handles.center_xrange.Value
+            handles.axes1.XLim = [str2double(handles.xmin.String) str2double(handles.xmax.String)] + Y1(k);
+        end
+
         drawnow;
     end
 end
@@ -628,3 +631,12 @@ function Npoints_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in center_xrange.
+function center_xrange_Callback(hObject, eventdata, handles)
+% hObject    handle to center_xrange (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of center_xrange
