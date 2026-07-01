@@ -4,60 +4,76 @@ addpath(genpath(cd))
 fs = 1000;
 dt = 1/fs;
 
-datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\';
-
-do_energetics = 0;
+datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
 visualize = 1;
-colors = lines(9);
+colors = lines(8);
 
-Ps = [3 2 3 4 4 5 10];
-dates = {'0903','2302','2302', '1304', '2004', '2704', '2206'};
-EMGchannels = [8 1 3 2 8 8 9];
+Ps = 2;
 
-% conditions
-vels = [50   100   150   200   -50  -100 -150 -200 0 0];
+EMGchannels = 4 * ones(1,11);
 
 % conditions that exist
-vid = [1 2 3 5 6 7 9 10 11];
-vid = [1 2 4 5 7 9 10];
-% vid = 1:10;
+vid = 1:10;
 
-Sdata(1).conds = {'MVC_extension', 'c50_01', 'c100_01', 'c150_01', 'c200_01', 'e50_01', 'e100_01', 'e150_01', 'e200_01', 'ISOM_ext', 'ISOM_FL'};
-Sdata(2).conds = {'MVC', 'c50', 'c100', 'c150', 'c200', 'e50', 'e100'};
-Sdata(3).conds = {'MVC', 'c50', 'c100', 'c150', 'c200', 'e50', 'e100'};
-Sdata(4).conds = {'MVC', 'c50', 'c100', 'c150', 'c200', 'e50', 'e100', 'e150', 'e200','ISOM_EXT', 'ISOM_FLEX'};
-Sdata(5).conds = {'MVC', 'c60', 'c120', 'c240', 'e60', 'e120', 'e240','ISOM_EXT', 'ISOM_FLEX', 'STR-SHR'};
-Sdata(6).conds = {'MVC_QUAD', 'c60', 'c120', 'c240', 'e60', 'e120', 'e240','ISOM_EXT', 'ISOM_FLEX', 'STR-SHR'};
-Sdata(7).conds = {'empty', 'c60', 'c120', 'c240', 'e60', 'e120', 'e240','ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(1).conds = {'MVC_QCEPS_L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(2).conds = {'MVC_QUAD L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(3).conds = {'MVC_QUADS L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(4).conds = {'MVC QUAD L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(5).conds = {'MVC_QUADS L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(6).conds = {'MVC_QUAD L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(7).conds = {'MVC_QUAD_Flex_2', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+Sdata(8).conds = {'MVC_QUAD L', 'c60','c120','c240_2', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR_SHOR'};
+Sdata(9).conds = {};
+Sdata(10).conds = {'QUAD L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR_SHOR'};
+Sdata(11).conds = {'QUAD_L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR_SHOR'};
+
+Sdata(1).vid = (1:10);
+Sdata(2).vid = (1:10);
+Sdata(3).vid = (1:10);
+Sdata(4).vid = [1 2, 4:10]; % cybex error during c120
+Sdata(5).vid = (1:10);
+Sdata(6).vid = (1:10);
+Sdata(7).vid = 1:10;
+Sdata(8).vid = 1:10;
+Sdata(10).vid = 1:10;
+Sdata(11).vid = [1, 5, 6];
 
 % tstop
-Sdata(1).tstop = (11:8:83);
-Sdata(2).tstop = (13:8:55);
-Sdata(3).tstop = (12:8:55);
-Sdata(4).tstop = (12:8:70);
-Sdata(5).tstop = [12 20 28 38:8:78];
-Sdata(6).tstop = 11:10:91;
+Sdata(1).tstop = [10 21:10:91];
+Sdata(2).tstop = [10 26:10:96];
+Sdata(3).tstop = [11 25:10:95];
+Sdata(4).tstop = (11:10:91);
+Sdata(5).tstop = [(11:10:81), 92];
+Sdata(6).tstop = (10:10:90);
+Sdata(7).tstop = (10:10:90);
+Sdata(8).tstop = [10, 30, 43:10:103]; % made up, need to verify
+Sdata(9).tstop = (10:10:90);
+Sdata(10).tstop = (10:10:90);
+Sdata(11).tstop = (10:10:90);
 
-Sdata(1).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.1', 'Torque.Torque'};
-Sdata(2).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.1', 'Torque.Torque'};
-Sdata(3).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.1', 'Torque.Torque'};
-Sdata(4).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.Angular Velocity', 'Torque.Torque'};
-Sdata(5).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.Angular Velocity', 'Torque.Torque'};
-Sdata(6).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.Angular Velocity', 'Torque.Torque'};
-Sdata(7).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.Angular Velocity', 'Torque.Torque'};
+% signals
+for i = 1:11
+Sdata(i).signals_of_interest = {'Voltage.x', 'Angle.Angle', 'Angular Velocity.Angular Velocity', 'Torque.Torque'};
+end
 
 % order (relevant for energetics)
-Sdata(1).order = [3:6, 10, 9, 8, 7, 2, 1];
-Sdata(2).order = (1:6);
-Sdata(3).order = (6:-1:1);
-Sdata(4).order = [4:6, 3:-1:1, 7, 8];
-Sdata(5).order = [6 5 4 1 2 3 7 8 9];
-Sdata(6).order = [6 4 2 1 3 5 7 8 9];
+Sdata(1).order = [8 2 9 5 6 4 1 7 3];
+Sdata(2).order = [9 8 2 4 6 3 7 1 5];
+Sdata(3).order = [8 1 7 3 5 9 4 6 2];
+Sdata(4).order = [1 4 5 2 8 7 9 3 6];
+Sdata(5).order = [8 9 4 6 1 5 2 7 3];
+Sdata(6).order = [8 9 2 4 7 5 1 6 3];
+Sdata(7).order = [3 4 2 5 7 9 8 6 1];
+Sdata(8).order = [6 3 7 8 5 1 2 4 9];
+Sdata(9).order = [5 2 1 7 6 8 9 3 4];
+Sdata(10).order = [7 2 8 5 6 9 4 1 3];
+Sdata(11).order = [4 3 7 9 8 1 5 6 2];
 
 % pre-allocate
-N = 10;
-M = 7;
+N = 9;
+M = length(Ps);
+
 Act     = nan(N,M);
 Tav     = nan(N,M);
 Wpos    = nan(N,M);
@@ -68,17 +84,18 @@ Pmetn   = nan(M,N);
 VO2_rest = nan(M,1);
 RQ_rest = nan(M,1);
 
-EMG_MVC = ones(N,M);
+Ameans = nan(1000, N, M);
+Tmeans = nan(1000, N, M);
+vmeans = nan(1000, N, M);
 
-for session = 7
-    P = Ps(session);
+for P = Ps
+%     P = Ps;
     
-    EMGchannel = EMGchannels(session);
+    EMGchannel = EMGchannels(P);
 
-    conds = Sdata(session).conds;
+    conds = Sdata(P).conds;
 
-%     cd([datafolder, dates{session}, '\P', num2str(P), '\Nexus\t1'])
-     cd([datafolder, dates{session}, '\test'])
+    cd([datafolder, '\P', num2str(P), '\cybex'])
     
     filenames = [];
     for i = 1:length(conds)
@@ -92,7 +109,7 @@ for session = 7
     end
     
     % velocity conditions
-    for trial = vid
+    for trial = Sdata(P).vid
         if ~isempty(filenames{trial})
             data = ezc3dRead(filenames{trial});
             
@@ -103,7 +120,7 @@ for session = 7
             analogData = data.data.analogs;  % [samples × channels]
             
             %%
-            signals_of_interest = Sdata(session).signals_of_interest;
+            signals_of_interest = Sdata(P).signals_of_interest;
             signals_of_interest{1}(9) = num2str(EMGchannel);
             
             id = nan(1,length(signals_of_interest));
@@ -138,13 +155,17 @@ for session = 7
             
             %% get data
             if trial == 1 % MVC
-                [EMG_MVC(trial,session), mid] = max(movmean(EMGe, 500));
+                if P == 3
+                    EMGe(t > 50) = nan; % artefact
+                end
+                
+                [EMG_MVC(trial,P), mid] = max(movmean(EMGe, 500));
                 
                 if visualize
                     figure(100)
                     nexttile
                     plot(t, EMGe, t, movmean(EMGe, 500)); hold on
-                    plot(t(mid), EMG_MVC(trial,session),'o')
+                    plot(t(mid), EMG_MVC(trial,P),'o')
                     
                     nexttile
                     plot(t, Tknee)
@@ -153,38 +174,38 @@ for session = 7
             else
                 
                 %% load ultrasound
-                if isfolder([datafolder, dates{session}, '\ultrasound'])
-                    cd([datafolder, dates{session}, '\ultrasound'])
-
-                    faslen = [];
-                    time = [];
-
-                    TF = [0 240];
-
-                    for i = 1:2    
-                        filename = ['p', num2str(session), '_', conds{trial}, '_', num2str(i), '_tracked.mat'];
-
-                        if exist(filename, 'file')
-                            load(filename);
-                            % sync
-                            delay = 120-Fdat.Region.Time(end);
-                            tshift = Fdat.Region.Time + 1 + delay + TF(i);
-
-                            faslen = [faslen; Fdat.Region.FL(:)];
-                            time = [time; tshift];
-
-                        end
-                    end
-                
-                    % interpolate
-                    FL = interp1(time,faslen, t);                
-                else
+%                 if isfolder([datafolder, dates{P}, '\ultrasound'])
+%                     cd([datafolder, dates{P}, '\ultrasound'])
+% 
+%                     faslen = [];
+%                     time = [];
+% 
+%                     TF = [0 240];
+% 
+%                     for i = 1:2    
+%                         filename = ['p', num2str(P), '_', conds{trial}, '_', num2str(i), '_tracked.mat'];
+% 
+%                         if exist(filename, 'file')
+%                             load(filename);
+%                             % sync
+%                             delay = 120-Fdat.Region.Time(end);
+%                             tshift = Fdat.Region.Time + 1 + delay + TF(i);
+% 
+%                             faslen = [faslen; Fdat.Region.FL(:)];
+%                             time = [time; tshift];
+% 
+%                         end
+%                     end
+%                 
+%                     % interpolate
+%                     FL = interp1(time,faslen, t);                
+%                 else
                     FL = nan(size(t));
-                end
+%                 end
                 
 
                 %% combine data
-                EMGn = EMGe / EMG_MVC(1,session) * 100;
+                EMGn = EMGe / EMG_MVC(1,P) * 100;
                 Data = [EMGn Kangle Vel Acc Tknee Power FL(:)];
                 
                 ks = trial-1;
@@ -196,20 +217,22 @@ for session = 7
                 [apks, alocs] = findpeaks(-Kangle_filt);
 
                 % only consider when greater than 1 s
-                x = find(diff(t(alocs))>1, 1);
-                locs = alocs(x:end);
-                pks = apks(x:end);
+                x1 = find(diff(t(alocs))>1, 1, 'first');
+                x2 = find(diff(t(alocs))>1, 1, 'last');
+                locs = alocs(x1:x2);
+                pks = apks(x1:x2);
                 
                 if ~strcmp(conds{trial}(1), 'I')
                     Ts = t(locs);
                 else
-                    Ts = 2.51:2.51:max(t); % not sure why 2.51
+                    
+                    Ts = (1/.374):(1/.374):max(t); 
                 end
                 
                 Ts = Ts(Ts<350);
                 
-                Tcycle(ks,session) = median(diff(Ts));
-                tlin = linspace(0,Tcycle(ks,session), 500);
+                Tcycle(ks,P) = median(diff(Ts));
+                tlin = linspace(0,Tcycle(ks,P), 1000);
                 
                 activeData = nan(length(tlin), length(Ts)-1, size(Data,2));
                 passiveData = nan(length(tlin), length(Ts)-1, size(Data,2));
@@ -218,10 +241,10 @@ for session = 7
                     for k = 1:length(Ts)-1
                         ids = t > Ts(k) & t < Ts(k+1);
                         
-                        if ~strcmp(conds{trial}(1), 'I') || session > 3
-                            if Ts(k) < 30
+                        if ~strcmp(conds{trial}(1), 'I') || P > 3
+                            if Ts(k) < 50
                                 passiveData(:,k,i) = interp1(t(ids) - t(find(ids,1)),Data(ids,i), tlin);
-                            elseif Ts(k) > 60 && Ts(k) < 120
+                            elseif Ts(k) > 250 && Ts(k) < 350
                                 activeData(:,k,i) = interp1(t(ids) - t(find(ids,1)),Data(ids,i), tlin);
                             end
                         else
@@ -248,12 +271,17 @@ for session = 7
                 Ppos(Ppos<0) = 0;
                 Pneg(Pneg>0) = 0;
                 
-                Act(ks,session) = mean(Amean, 'omitnan');
-                Tav(ks,session) = mean(Tmean, 'omitnan');
-                Wpos(ks,session) = trapz(tlin(idf), Ppos(idf));
-                Wneg(ks,session) = trapz(tlin(idf), Pneg(idf));
-                Wnet(ks,session) = trapz(tlin(idf), Pmean(idf));     
-                                
+                Act(ks,P) = mean(Amean, 'omitnan');
+                Tav(ks,P) = mean(Tmean, 'omitnan');
+                Wpos(ks,P) = trapz(tlin(idf), Ppos(idf));
+                Wneg(ks,P) = trapz(tlin(idf), Pneg(idf));
+                Wnet(ks,P) = trapz(tlin(idf), Pmean(idf));   
+                
+                % store
+                Ameans(:,ks, P) = Amean;
+                vmeans(:,ks, P) = vmean;
+                Tmeans(:,ks, P) = Tmean;
+                 
                 %% plot per cycle
                 if visualize
                     labs = {'Activation', 'Angle', 'Velocity', 'Acceleration', 'Torque', 'Power', 'Length'};
@@ -264,11 +292,12 @@ for session = 7
                     
                     for i = 1:size(Data,2)
                         
-                        figure(trial + (session-1)*10 - 1)
+                        figure(trial + (P-1)*10 - 1)
                         set(gcf, 'Name', conds{trial})
                         nexttile
                         
-                        plot(tlin, activeData(:,:,i), 'color', [.9 .9 .9]); hold on
+                        plot(tlin, activeData(:,:,i), 'color', [.8 .8 1]); hold on
+                        plot(tlin, passiveData(:,:,i), 'color', [1 .8 .8]); hold on
                         plot(tlin, mean(activeData(:,:,i), 2, 'omitnan'), '-', 'linewidth', 2, 'color', colors(1,:)); hold on
                         plot(tlin, mean(passiveData(:,:,i), 2, 'omitnan'), '-', 'linewidth', 2, 'color', colors(2,:)); hold on
                         
@@ -280,7 +309,7 @@ for session = 7
                         
                         ylim([ymins(i) ymaxs(i)])
                         
-                        xlim([0 Tcycle(ks,session)])
+                        xlim([0 Tcycle(ks,P)])
                     end
                     
 %                     plot(tlin, Pmean, 'k--')
@@ -297,7 +326,7 @@ for session = 7
     if visualize
         for i = 1:(trial-1)
             
-            figure(i + (session-1)*10)
+            figure(i + (P-1)*10)
             set(gcf, 'units', 'normalized', 'position', [.2 .2 .3 .6])
 %             
 %             subplot(321)
@@ -311,9 +340,8 @@ for session = 7
 
     
     %% analyze energetics    
-    if do_energetics
-    cd([datafolder, dates{session}, '\P', num2str(P)])
-    filename = ['P',num2str(Ps(session)), '.xlsx'];
+    cd([datafolder, '\P', num2str(P)])
+    filename = ['P',num2str(P), '.xlsx'];
     
     time = readmatrix(filename,   "OutputType",  "datetime", "Range", 'J:J');
     VO2r = readmatrix(filename, "Range", 'O:O');
@@ -343,21 +371,21 @@ for session = 7
     RQa = movmean(RQi, [2 0],'SamplePoints',tint);
     
     % net oxygen consumption
-    [VO2_rest(session), mid] = min(VO2a);
-    [VO2_rest(session)] = mean(VO2i(tint<5), 'omitnan');
+    [VO2_rest(P), mid] = min(VO2a);
+    [VO2_rest(P)] = mean(VO2i(tint<5), 'omitnan');
     
-    VO2n = VO2a - VO2_rest(session);
-    RQ_rest(session) = RQa(mid);
+    VO2n = VO2a - VO2_rest(P);
+    RQ_rest(P) = RQa(mid);
     
     figure(200)
     nexttile
-    plot(tr, VO2r - VO2_rest(session), 'color', [.8 .8 .8]); hold on
+    plot(tr, VO2r - VO2_rest(P), 'color', [.8 .8 .8]); hold on
     plot(tint, VO2n,'-', 'color', colors(2,:), 'linewidth', 2)
     title('VO2')
     
     yline(0,'k--')
     
-    tstop = Sdata(session).tstop;
+    tstop = Sdata(P).tstop;
     VO2m = nan(1, length(tstop));
     for i = 1:length(tstop)
         xline(tstop(i), 'k--')
@@ -370,7 +398,7 @@ for session = 7
     plot(tint, RQa,'-', 'color', colors(2,:), 'linewidth', 2)
     title('RQ')
     
-    yline(RQ_rest(session),'k--')
+    yline(RQ_rest(P),'k--')
     
     RQm = nan(1, length(tstop));
     for i = 1:length(tstop)
@@ -385,8 +413,8 @@ for session = 7
     joule_per_o2 = polyval(polyfit(RQdata, joule_per_o2_data, 1), RQm); % Joule per L
     
     % calculate net metabolic rate
-    Pmetn(session,1:length(VO2m)) = (VO2m /1000 / 60) .* joule_per_o2; % W
-    end
+    Pmetn(P,1:length(VO2m)) = (VO2m /1000 / 60) .* joule_per_o2; % W
+    
 end
 
 %% summary graphs
@@ -394,53 +422,54 @@ if ishandle(300), close(300); end
 delta = [0 -5 5 0 0 0];
 bw = [.5 .1 .1 .5 1 1];
 
-vels = [50   100   150   200   -50  -100 -150 -200 -5 5];
 
-vels = [60 120 240 -60 -120 -240 -5 5 nan];
+vels = [60 120 240 -60 -120 -240 -5 5 0];
 
 scolors = colors([6 2 1 3 5 1],:);
 
 % average mechanical power
 Pmech_pos = Wpos./Tcycle;
 Pmech_net = Wnet./Tcycle;
+Pmech_neg = Wneg./Tcycle;
 
 titles = {'Activation', 'Torque', 'Mechanical power', 'Metabolic power', 'Mechanical efficiency'};
 units = {'%', 'N-m', 'W', 'W', '-'};
 
-for session = 6
+% for P = 2
 
-    order = Sdata(session).order;
+    order = Sdata(P).order;
     N = length(order);
     
-    emech = Pmech_net(vid(2:end)-1,session) ./ Pmetn(session,order)';
+    emech = Pmech_net(:,P) ./ Pmetn(P,order)';
     
     figure(300)   
     subplot(511)
-    bar(vels(vid(2:end)-1)+delta(session), Act(vid(2:end)-1,session), 'BarWidth', bw(session), 'facecolor', scolors(session,:));hold on
-    
+    bar(Act(:,P));hold on
+  
     subplot(512)
-    bar(vels(vid(2:end)-1)+delta(session), Tav(vid(2:end)-1,session), 'BarWidth', bw(session), 'facecolor', scolors(session,:));hold on
+    bar(Tav(:,P));hold on
   
     subplot(513)
-    bar(vels(vid(2:end)-1)+delta(session), Pmech_net(vid(2:end)-1,session), 'BarWidth', bw(session), 'facecolor', scolors(session,:)); hold on
+    bar([Pmech_net(:,P) Pmech_pos(vid(2:end)-1,P) Pmech_neg(vid(2:end)-1,P)]); hold on
     
     subplot(514)
-    bar(vels(vid(2:end)-1)+delta(session), Pmetn(session,order), 'BarWidth', bw(session), 'facecolor', scolors(session,:)); hold on
+    bar(Pmetn(P,order)); hold on
   
     subplot(515)
-    bar(vels(vid(2:end)-1)+delta(session), emech * 100, 'BarWidth', bw(session), 'facecolor', scolors(session,:)); hold on
+    bar(emech * 100); hold on
 
     xlabel('Angular velocity condition (deg/s)') 
-end
+% end
 
 
-legend('P1 - session 1', 'P2 - session 1', 'P2 - session 2', 'location', 'best')
+% legend('P1 - P 1', 'P2 - P 1', 'P2 - P 2', 'location', 'best')
 
 %
 for i = 1:5
     subplot(5,1,i)
-    set(gca, 'xtick', -200:50:200);
+%     set(gca, 'xtick', -200:50:200);
     title(titles{i})
+    xticklabels(Sdata(1).conds(2:end));
     ylabel([titles{i}, '(', units{i}, ')'])
     box off
 end
