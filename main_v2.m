@@ -69,6 +69,9 @@ Sdata(8).order = [6 3 7 8 5 1 2 4 9];
 Sdata(9).order = [5 2 1 7 6 8 9 3 4];
 Sdata(10).order = [7 2 8 5 6 9 4 1 3];
 Sdata(11).order = [4 3 7 9 8 1 5 6 2];
+Sdata(12).order = [   5     7     8     3     6     1     2     4     9];
+Sdata(13).order = [   5     8     3     9     2     7     6     1     4];
+Sdata(14).order = [  9     2     1     6     8     3     7     4     5];
 
 % pre-allocate
 N = 9;

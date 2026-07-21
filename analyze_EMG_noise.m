@@ -1,7 +1,9 @@
-for i = 1:size(EMG,2)
+EMG = analogData(:,sort(id(1:length(EMGchannels))));
+
+for i = 1:size(EMG,2)-2
     
     figure(10)
-    plot(t, EMG(:,i)+i); hold on
+    plot(t, EMG(:,i)+i/5); hold on
 end
 
 %%

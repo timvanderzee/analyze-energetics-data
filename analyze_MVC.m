@@ -3,6 +3,8 @@ datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 fs = 1000;
 dt = 1/fs;
 
+Ps = 15;
+
 muscle_names = {'VL_L', 'VM_L', 'RF_L', 'VL_R', 'VM_R', 'RF_R', 'BF', 'SM', 'GL', 'GM', 'TA', 'VL_L2'};
 
 enums = repmat([4 10 8 6 12 7 5 9 13 11 14 4], 20, 1);
@@ -21,13 +23,17 @@ names(4).chns = 9:11;
 
 % when using blue box
 enums(11,:) = [4 10 16 12 11 7 15 9 13 1 14 3];
+enums(12,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
+enums(13,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
+enums(14,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
+enums(15,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
 
 m = 0;
-MVC = nan(11,3,4);
+MVC = nan(Ps,3,4);
 
 for k = 1:4
     
-for P = 1:11
+for P = 1:Ps
     
 
     filename = [datafolder, '\P', num2str(P), '\cybex\p', num2str(P), '_', names(k).fname, '.c3d'];
@@ -80,6 +86,8 @@ for P = 1:11
         for j = 1:size(EMG,2)
             MVC(P,j,k) = max(EMGe(:,j));
         end
+    else
+        disp(['Does not exist: ', filename])
     end
 end
 end
@@ -111,3 +119,7 @@ MVCs(6,9) = nan;
 %   - p4 TA: very noisy (white 14)
 %   - p5 GM: very noisy (white 11)
 %   - p6 TA: very noisy (white 14)
+
+%% save
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
+save('MVC.mat', 'MVCs')
