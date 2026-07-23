@@ -2,8 +2,9 @@ clear all; close all; clc
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 fs = 1000;
 dt = 1/fs;
+visualize = 0;
 
-Ps = 15;
+Ps = 1:15;
 
 muscle_names = {'VL_L', 'VM_L', 'RF_L', 'VL_R', 'VM_R', 'RF_R', 'BF', 'SM', 'GL', 'GM', 'TA', 'VL_L2'};
 
@@ -28,12 +29,19 @@ enums(13,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
 enums(14,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
 enums(15,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
 
+labs = {'VL_L', 'VM_L', 'RF_L', 'VL_R', 'VM_R', 'RF_R', 'BF', 'SM', 'GL', 'GM', 'TA'};
+
 m = 0;
-MVC = nan(Ps,3,4);
+% MVC = nan(Ps,3,4);
+
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
+load('MVC.mat', 'MVCs')
+
+Tknee = nan(max(Ps),2);
 
 for k = 1:4
     
-for P = 1:Ps
+for P = Ps
     
 
     filename = [datafolder, '\P', num2str(P), '\cybex\p', num2str(P), '_', names(k).fname, '.c3d'];
@@ -51,6 +59,10 @@ for P = 1:Ps
         [b1,a1] = butter(1, 20/(.5*fs), 'high');
         [b2,a2] = butter(1, 5/(.5*fs), 'low');
 
+        Tor = analogData(:,end-1);
+        Ang = analogData(:,end-4);
+        Vel = analogData(:,end-3);
+        
         EMG = analogData(:,enums(P,names(k).chns));
         N = length(analogData);
         t = 0:dt:(N-1)*dt;
@@ -71,26 +83,75 @@ for P = 1:Ps
             EMGe(t>60,1) = nan;
         end
         
-        figure(k)
-        nexttile
-        
-        for j = 1:size(EMG,2)
-            plot(t,EMGf(:,j)+j); hold on
-            plot(t,EMGe(:,j) + j, 'k-', 'linewidth', 2)
+        if visualize
+            figure(k)
+            nexttile
+            set(gcf, 'name', names(k).fname)
+
+            for j = 1:size(EMG,2)
+                plot(t,EMGf(:,j)+j); hold on
+            end
+
+            for j = 1:size(EMG,2)
+                plot(t,EMGe(:,j) + j, 'k-', 'linewidth', 2)
+            end
+
+            title(num2str(P))
+            xlim([0 min([max(t) 100])])
+            box off
+
+            legend(labs{names(k).chns})
         end
-        
-        title(num2str(P))
-        xlim([0 min([max(t) 100])])
-        box off
         
         for j = 1:size(EMG,2)
             MVC(P,j,k) = max(EMGe(:,j));
+        end
+        
+        if k == 1
+            EMGn = mean(EMGe ./ MVC(P,:,k),2, 'omitnan');
+    %         
+            istat = abs(movmean(Vel,100)) < .1;
+            irest = EMGn < .1;
+            iact = EMGn > .2;
+            iflex = Ang < .5;
+            iext = Ang > 1;
+
+            Tmin = [mean(Tor(irest & iflex & istat)) mean(Tor(irest & iext & istat))];
+            Tmax = [max(movmean(Tor(iact & iflex & istat),100)) max(movmean(Tor(iact & iext & istat),100))];
+
+            Amin = [mean(Ang(irest & iflex & istat)) mean(Ang(irest & iext & istat))];
+            Amax = [mean(Ang(iact & iflex & istat)) mean(Ang(iact & iext & istat))];
+
+            Tknee(P,:) = (Tmax - Tmin) * 1000;
+            
+            % torque
+%             figure(100)
+%             subplot(221)
+%             plot(t, EMGn)
+% 
+%             subplot(222)
+%             plot(t, Tor)
+% 
+%             subplot(223)
+%             plot(t, Ang)
+% 
+%             subplot(224)
+%             plot(Ang, Tor); hold on
+%             plot(Ang(irest & iflex & istat),Tor(irest & iflex & istat), '.')
+%             plot(Ang(irest & iext & istat),Tor(irest & iext & istat), '.')
+%             plot(Ang(iact & iflex & istat),Tor(iact & iflex & istat), '.')
+%             plot(Ang(iact & iext & istat),Tor(iact & iext & istat), '.')
+% 
+%             plot(Amin, Tmin, 'o')
+%             plot(Amax, Tmax, 'o')
         end
     else
         disp(['Does not exist: ', filename])
     end
 end
 end
+
+% return
 
 %% bad channels
 % QUAD_L: all good
@@ -121,5 +182,5 @@ MVCs(6,9) = nan;
 %   - p6 TA: very noisy (white 14)
 
 %% save
-cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
-save('MVC.mat', 'MVCs')
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
+save('MVC.mat', 'MVCs', 'Tknee')

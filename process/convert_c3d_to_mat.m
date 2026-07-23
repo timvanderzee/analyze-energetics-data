@@ -6,7 +6,7 @@ dt = 1/fs;
 
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
-Ps = 2:15;
+Ps = 1;
 
 for i = 1:11 % max number of EMG channels
     SOIs{i} = 'Voltage.x';
@@ -30,7 +30,9 @@ for P = Ps
     
     disp(P)
     
-    if P == 11 % blue box
+    if P == 1
+        EMGchannels = [4 10 8 6 12 7 5 9 11 13 14]; % switch GM and GL
+    elseif P == 11 % blue box
         EMGchannels = [4 10 16 12 11 7 15 9 13 1 14];
     elseif P > 11
         EMGchannels = [4 10 16 12 11 7 3 9 1 1 14];
@@ -108,20 +110,63 @@ for P = Ps
                 end
                 
                 %% filter EMG
-                [b1,a1] = butter(1, 20/(.5*fs), 'high');
-                [b2,a2] = butter(1, 5/(.5*fs), 'low');
+                % remove GM
+                EMG(:,10) = 0;
                 
-                EMGe = nan(size(EMG));
+                % filter
+                [b1,a1] = butter(1, [20 400]/(.5*fs), 'bandpass');
+%                 [b2,a2] = butter(1, 5/(.5*fs), 'low');
+                
+                EMGff = nan(size(EMG));
                 for ii = 1:length(EMGchannels)
                     EMGf = filtfilt(b1,a1, EMG(:,ii));
-                    EMGff = filtfilt(b2,a2,abs(EMGf));
+                    EMGff(:,ii) = abs(EMGf);
+%                     EMGff = filtfilt(b2,a2,abs(EMGf));
+
+                end
+                
+
+                % normalize with respect to MVC
+                fEMG = EMGff ./ MVCs(P,1:length(EMGchannels)) * 100;
+                fEMG2 = EMG ./ MVCs(P,1:length(EMGchannels)) * 100;
+                
+%                 % no MVCs
+%                 if P == 2
+%                     fEMG(:,4) = 0; % no VL MVC
+%                 elseif P == 5 || P == 6
+%                     fEMG(:,9) = 0;   
+%                 elseif P == 10
+%                     fEMG(:,7) = 0;
+%                 end
+                                 
+                % noise detection
+                dEMGs = [zeros(1,size(fEMG,2)); diff(fEMG2)];
+                sid = abs(dEMGs) > 300;
+                
+                for i = 1:size(EMG,2)
+                    ids = find(sid(:,i));
+                    ir(i) = sum(sid(:,i));
                     
-                    EMGb = mean(EMGff(t < 50));
-                    EMGe(:,ii) = EMGff - EMGb;
+                    if ir(i) > 10
+                    
+                        for j = 1:length(ids)
+                            i1 = max(1, ids(j)-200);
+                            i2 = min(length(EMG), ids(j)+200);
+
+                            fEMG(i1:i2,i) = nan;
+                        end
+                    end
+                end
+                
+                EMGn = nan(size(EMG));
+                for ii = 1:length(EMGchannels)
+                      
+                    EMGb = mean(fEMG(t < 50));
+                    EMGn(:,ii) = fEMG(:,ii) - EMGb;
                 end
    
                 % normalize wit respect to MVC
-                EMGn = EMGe ./ MVCs(P,1:length(EMGchannels)) * 100;
+%                 EMGn = EMGe ./ MVCs(P,1:length(EMGchannels)) * 100;
                 
                 %% subtract gravity
                 FData(:,3) = FData(:,3) - (As(P,1)*cosd(FData(:,1)-As(P,2)) + As(P,3));
