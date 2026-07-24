@@ -245,5 +245,5 @@ figure(101)
 % bar(reordercats(categorical(conds), conds), mean(A,2,'omitnan'))
 
 %% save
-cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
 save('mechanics.mat', 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact')

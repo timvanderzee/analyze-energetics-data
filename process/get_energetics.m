@@ -164,4 +164,4 @@ xlabel('Angular velocity condition (deg/s)')
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
-save('metabolics.mat', 'Pmet', 'Sdata')
+% save('metabolics.mat', 'Pmet', 'Sdata')

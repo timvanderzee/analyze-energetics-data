@@ -1,85 +1,110 @@
-close all; 
-clear all
+clear all; close all; clc
 
-%% analyze energetics    
-cd('C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\2004')
-filename = 'P4.xlsx';
+Tmax = 1/.374; % placeholder
 
-time = readmatrix(filename,   "OutputType",  "datetime", "Range", 'J:J');
-VO2r = readmatrix(filename, "Range", 'O:O');
-RQr = readmatrix(filename, "Range", 'Q:Q');
+Tmax = 2;
+
+Ps = [1:15];
+Ps = [7:8, 10:15];
+
+load('mechanics.mat', 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact')
+load('metabolics.mat', 'Pmet', 'Sdata')
+
+Pmet = Pmet(Ps,:);
+
+%% correct Pmet for time isometric
+Piso = Pmet(:,7:8);
+N = size(Piso,1);
+
+% time the muscle was isometric
+% Tiso = Tmax/2 - [Ts(1:3) Tl(4:6) Tmax/2 Tmax/2 Ts(end)+Tl(end)];
+
+% fraction isometric compared to isometric condition
+% fiso = repmat(Tiso / (Tmax/2), N,1);
+fiso = [Iact(Ps,1:3)./Iact(Ps,7) Iact(Ps,4:9)./Iact(Ps,8)];
+
+% portion of metabolic rate due to contraction
+Pcor = Pmet - [Piso(:,2) .* fiso(:,1:3)  Piso(:,1) .* fiso(:,4:end)];
+
+% correct for individual offset
+Pcor2 = Pmet + mean(Pmet(:), 'omitnan') - mean(Pmet,2);
+
+%% compute efficiency
+Pav = W(:,Ps,:) ./ mTcycle;
+
+Pmcor(:,:,1) = W(:,Ps,1) ./ (Tl+Ts)'; % net
+Pmcor(:,:,2) = W(:,Ps,2) ./ Ts'; % positive
+Pmcor(:,:,3) = W(:,Ps,3) ./ Tl'; % negative
+
+eff         = Pav./Pmet'; 
+% eff_cor     = squeeze(mean(Pav,2))./ mean(Pcor)'; 
+eff_cor     = Pav./ Pcor'; 
+
+    
+%%
+close all
+
+colors = lines(5);
+
+figure(1)
+
+subplot(231)
+errorbar(1:9, mean(Pmet, 'omitnan'), std(Pmet, 'omitnan'), 'o'); hold on
+errorbar(1:9, mean(Pcor2, 'omitnan'), std(Pcor2, 'omitnan'), 'o'); hold on
+title('Metabolic rate')
+
+subplot(234);
+errorbar(1:9, mean(Pcor, 'omitnan'), std(Pcor, 'omitnan'), 'o')
+
+for i = 1:3
+    subplot(232)
+    errorbar(1:9, mean(Pav(:,:,i),2, 'omitnan'), std(Pav(:,:,i),1,2, 'omitnan'), 'o'); hold on
+    title('Mechanical work rate')
+    
+    subplot(235)
+    errorbar(1:9, mean(Pmcor(:,:,i),2, 'omitnan'), std(Pmcor(:,:,i),1,2, 'omitnan'), 'o'); hold on
+
+    subplot(233)
+    errorbar(1:9, mean(eff(:,:,i),2, 'omitnan'), std(eff(:,:,i),1,2, 'omitnan'), 'o', 'color', colors(i,:)); hold on
+    ylim([-1 1])
+    title('Efficiency')
+    
+    subplot(236);
+%     plot(1:9, mean(eff_cor(:,i),2, 'omitnan'), 'o', 'color', colors(i,:)); hold on
+    errorbar(1:9, mean(eff_cor(:,:,i),2, 'omitnan'), std(eff_cor(:,:,i),1,2, 'omitnan'), 'o', 'color', colors(i,:)); hold on
+    ylim([-1 1])
+
+end
+
+for i = 1:6
+    subplot(2,3,i)
+    box off
+end
+
+return
 
 %%
-Sdata(1).tstop = (12:8:70);
-Sdata(1).tstop = [12 20 28 38:8:78];
+if ishandle(10), close(10); end
+figure(10)
 
-session = 1;
-colors = parula(5);
-tr = hour(time)*60 + minute(time) + second(time)/60;
-tint = 0:(1/60):max(tr);
+titles = {'Overall', 'Isometric', 'Contraction', 'Rest'};
 
-% get finite values
-isf = isfinite(tr);
-tf = tr(isf);
-VO2f = VO2r(isf);
-RQf = RQr(isf);
-
-% get unique values
-[~, isu] = unique(tf);
-t = tf(isu);
-VO2 = VO2f(isu);
-RQ = RQf(isu);
-
-% interpolate
-VO2i = interp1(t, VO2, tint);
-RQi = interp1(t, RQ, tint);
-
-% moving average
-VO2a = movmean(VO2i, [2 0],'SamplePoints',tint);
-RQa = movmean(RQi, [2 0],'SamplePoints',tint);
-
-% net oxygen consumption
-[VO2_rest(session), mid] = min(VO2a);
-VO2_rest(session) = mean(VO2i(tint<5),  'omitnan');
-
-VO2n = VO2a - VO2_rest(session);
-RQ_rest(session) = RQa(mid);
-
-figure(200)
-nexttile
-plot(tr, VO2r - VO2_rest(session), 'color', [.8 .8 .8]); hold on
-plot(tint, VO2i - VO2_rest(session), 'color', [.5 .5 .5]); hold on
-plot(tint, VO2n,'-', 'color', colors(2,:), 'linewidth', 2)
-title('VO2')
-
-yline(0,'k--')
-
-tstop = Sdata(session).tstop;
-VO2m = nan(1, length(tstop));
-for i = 1:length(tstop)
-    xline(tstop(i), 'k--')
-    VO2m(i) = interp1(tint, VO2n, tstop(i));
-    plot(tstop(i), VO2m(i), 'ko')
+for i = 1:4
+    subplot(4,1,i)
+    bar(1:9, mean(A(:,:,i),2, 'omitnan')'); hold on
+    errorbar(1:9, mean(A(:,:,i),2, 'omitnan'), std(A(:,:,i),1,2, 'omitnan'), 'o'); hold on
+    xticklabels(conds)
+title(titles{i})
+box off
 end
 
-nexttile
-plot(tr, RQr, 'color', [.8 .8 .8]); hold on
-plot(tint, RQa,'-', 'color', colors(2,:), 'linewidth', 2)
-title('RQ')
 
-yline(RQ_rest(session),'k--')
+%% 
+figure(11)
 
-RQm = nan(1, length(tstop));
-for i = 1:length(tstop)
-    xline(tstop(i), 'k--')
-    RQm(i) = interp1(tint, RQa, tstop(i));
-    plot(tstop(i), RQm(i), 'ko')
-end
-
-% calc metabolic energy expenditure according to Brockway
-RQdata = [0.7145; 1];
-joule_per_o2_data = [19.8071 21.0956] * 1e3;
-joule_per_o2 = polyval(polyfit(RQdata, joule_per_o2_data, 1), RQm); % Joule per L
-
-% calculate net metabolic rate
-Pmetn(session,1:length(VO2m)) = (VO2m /1000 / 60) .* joule_per_o2; % W
+bar(1:9, mean(Pmet'./A(:,Ps,1),2,'omitnan')); hold on
+errorbar(1:9, mean(Pmet'./A(:,Ps,1),2,'omitnan'),std(Pmet'./A(:,Ps,1),1,2,'omitnan')) 
+    
+    xticklabels(conds)
+title(titles{i})
+box off

@@ -115,29 +115,16 @@ for P = Ps
                 
                 % filter
                 [b1,a1] = butter(1, [20 400]/(.5*fs), 'bandpass');
-%                 [b2,a2] = butter(1, 5/(.5*fs), 'low');
                 
                 EMGff = nan(size(EMG));
                 for ii = 1:length(EMGchannels)
                     EMGf = filtfilt(b1,a1, EMG(:,ii));
                     EMGff(:,ii) = abs(EMGf);
-%                     EMGff = filtfilt(b2,a2,abs(EMGf));
-
                 end
                 
-
                 % normalize with respect to MVC
                 fEMG = EMGff ./ MVCs(P,1:length(EMGchannels)) * 100;
                 fEMG2 = EMG ./ MVCs(P,1:length(EMGchannels)) * 100;
-                
-%                 % no MVCs
-%                 if P == 2
-%                     fEMG(:,4) = 0; % no VL MVC
-%                 elseif P == 5 || P == 6
-%                     fEMG(:,9) = 0;   
-%                 elseif P == 10
-%                     fEMG(:,7) = 0;
-%                 end
                                  
                 % noise detection
                 dEMGs = [zeros(1,size(fEMG,2)); diff(fEMG2)];
@@ -164,9 +151,6 @@ for P = Ps
                     EMGb = mean(fEMG(t < 50));
                     EMGn(:,ii) = fEMG(:,ii) - EMGb;
                 end
-   
-                % normalize wit respect to MVC
-%                 EMGn = EMGe ./ MVCs(P,1:length(EMGchannels)) * 100;
                 
                 %% subtract gravity
                 FData(:,3) = FData(:,3) - (As(P,1)*cosd(FData(:,1)-As(P,2)) + As(P,3));
