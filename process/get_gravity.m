@@ -1,7 +1,10 @@
-clear all; close all; clc
+function[] = get_gravity(Ps)
 
-Ps = 1:15;
-As =  nan(length(Ps),3);
+% Ps = 18;
+% As =  nan(length(Ps),3);
+
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
+load('gravity.mat', 'As')
 
 fs = 1000;
 dt = 1/fs;
@@ -34,14 +37,14 @@ for P = Ps
             N = length(analogData);
             t = 0:dt:(N-1)*dt;           
             
-            [b,a] = butter(1, 0.5/(.5*fs), 'low');
+            [b,a] = butter(1, 0.2/(.5*fs), 'low');
             
             Kangle = analogData(:,17) * 180/pi;
             Ktorq = analogData(:,20) * 1000;
             Kvel = analogData(:,18);
             Kvel_filt = filtfilt(b,a,abs(Kvel));
             
-            id = Kvel_filt(:) < .01 & t(:) < 130;
+            id = Kvel_filt(:) < .01; % & t(:) < 130;
             
             %%
             figure(P)
@@ -122,5 +125,7 @@ for P = Ps
 end
 
 %% save
-cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
 save('gravity.mat', 'As')
+
+end

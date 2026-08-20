@@ -1,14 +1,13 @@
-clear all; close all; clc
-addpath(genpath(cd))
+function[] = get_energetics(Ps)
 
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
 
 colors = lines(8);
 
-Ps = 1:15;
-
-conds = {'MVC_QCEPS_L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+% Ps = 18;
+% 
+% conds = {'MVC_QCEPS_L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
 
 for i = Ps
     Sdata(i).tstop = 10:10:90;
@@ -21,6 +20,8 @@ Sdata(3).tstop = [11 25:10:95];
 Sdata(4).tstop = (11:10:91);
 Sdata(5).tstop = [(11:10:81), 92];
 Sdata(8).tstop = [10, 30, 43:10:103]; % made up, need to verify
+
+Sdata(16).tstop = 10:10:80;
 
 % order (relevant for energetics)
 Sdata(1).order = [8 2 9 5 6 4 1 7 3];
@@ -38,16 +39,22 @@ Sdata(12).order = [5 7 8 3 6 1 2 4 9];
 Sdata(13).order = [5 8 3 9 2 7 6 1 4];
 Sdata(14).order = [9 2 1 6 8 3 7 4 5];
 Sdata(15).order = [7 4 9 5 1 3 2 6 8];
+Sdata(16).order = [8 3 6 7 5 1 2 4 9];
+Sdata(17).order = [ 6     1     5     3     7     2     8     4];
+Sdata(18).order = [ 8     6     4     5     1     7     3     2];
+Sdata(19).order = [7     6     3     8     5     4     1     2];
 
 % pre-allocate
 N = 9;
-M = length(Ps);
+M = max(Ps);
 
 
 Pmetn   = nan(M,N);
 VO2_rest = nan(M,1);
 RQ_rest = nan(M,1);
 
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
+load('metabolics.mat', 'Pmet')
 
 for P = Ps
 
@@ -137,11 +144,15 @@ end
 if ishandle(300), close(300); end
 
 vels = [60 120 240 -60 -120 -240 -5 5 0];
-
+% Pmet = nan(max(Ps), 9);
 for P = Ps
-order = Sdata(P).order;
+    order = Sdata(P).order;
 
-Pmet(P,:) = Pmetn(P, order);
+    for i = 1:length(order)
+        id = find(order == i);
+    
+        Pmet(P,i) = Pmetn(P, id);
+    end
 end
 
 
@@ -153,9 +164,10 @@ Pmetc = Pmet - Sm + mean(Sm, 'omitnan');
 
 figure(300)   
 nexttile
-errorbar(1:9, mean(Pmetc, 'omitnan'), std(Pmetc, 'omitnan')); hold on
+errorbar(1:9, mean(Pmet, 'omitnan'), std(Pmet, 'omitnan')); hold on
 
-xticklabels(conds);
+
+% xticklabels(conds);
 ylabel('Metabolic rate (W)')
 box off
 
@@ -163,5 +175,5 @@ xlabel('Angular velocity condition (deg/s)')
 
 
 %% save
-cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
-% save('metabolics.mat', 'Pmet', 'Sdata')
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
+save('metabolics.mat', 'Pmet', 'Sdata')

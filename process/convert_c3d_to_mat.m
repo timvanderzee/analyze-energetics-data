@@ -1,21 +1,20 @@
-clear all; close all; clc
-addpath(genpath(cd))
+function[] = convert_c3d_to_mat(Ps)
+% addpath(genpath(cd))
 
 fs = 1000;
 dt = 1/fs;
 
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
-Ps = 1;
+% Ps = 18;
 
 for i = 1:11 % max number of EMG channels
     SOIs{i} = 'Voltage.x';
 end
 
-% signals
-conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
 
 % load MVC and graivty
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
 load('MVC.mat', 'MVCs');
 load('gravity.mat', 'As');
 
@@ -24,6 +23,17 @@ dsf = 4;
 
 %% Process
 for P = Ps
+    
+    if P < 16
+        % signals
+        conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+
+    else
+           % signals
+        conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
+
+    end
+        
     data = [];
     
     signals_of_interest = [SOIs, {'Angle.Angle', 'Angular Velocity.Angular Velocity', 'Torque.Torque'}];    
@@ -58,7 +68,7 @@ for P = Ps
         
        
         % velocity conditions
-        for trial = 1:9
+        for trial = 1:length(filenames)
             if ~isempty(filenames{trial})
                                 
                 c3ddata = ezc3dRead(filenames{trial});

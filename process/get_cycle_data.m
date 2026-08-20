@@ -1,4 +1,5 @@
-clear all; close all; clc
+function[] = get_cycle_data(Ps)
+
 addpath(genpath(cd))
 
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
@@ -6,7 +7,7 @@ datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 visualize = 1;
 colors = lines(8);
 
-Ps = 14:15;
+% Ps = 18;
 
 labs = {'VL_L', 'VM_L', 'RF_L', 'VL_R', 'VM_R', 'RF_R', 'BF', 'SM', 'GL', 'GM', 'TA'};
 
@@ -38,12 +39,18 @@ load('cycle_data.mat', 'tlin', 'Data_active', 'Data_passive', 'labs', 'units','y
 %% Process
 
 th = 20; % velocity threshold
-smps = [1 1 1 -1 -1 -1 0 0 1];
+
 
 func = @(a, x) a*x(:);
 fcost = @(a,x,y) sum((y(:) - func(a,x(:))).^2, 'omitnan');
 
 for P = Ps
+    
+    if P < 16
+        smps = [1 1 1 -1 -1 -1 0 0 1];
+    else
+        smps = [1 1 1 1 -1 -1 -1 -1];
+    end
     
     disp(P)
     
@@ -54,7 +61,7 @@ for P = Ps
         
         load(['P', num2str(P), '_data.mat'], 'data', 'conds')
         
-        for trial = 1:9
+        for trial = 1:length(conds)
             %             Data = [EMGn Kangle Vel Tknee];
             
             Data = [data(trial).EMG data(trial).Angle data(trial).Velocity data(trial).Torque];
@@ -103,7 +110,9 @@ for P = Ps
             
             %% get locs
             if ~strcmp(conds{trial}(1), 'I')
-                Vel = data(trial).Velocity * smps(trial);
+                [b,a] = butter(2, .05);
+                
+                Vel = filtfilt(b,a,data(trial).Velocity * smps(trial));
 
                 id = 1;
                 i = 0;
@@ -330,3 +339,5 @@ end
 %% Save
 cd('C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset')
 save('cycle_data.mat', 'tlin', 'Data_active', 'Data_passive', 'labs', 'units','ymins', 'Tcycle')
+
+end

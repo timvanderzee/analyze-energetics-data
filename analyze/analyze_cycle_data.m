@@ -1,12 +1,20 @@
-clear all; close all; clc
-% profile on
-conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+function[] = analyze_cycle_data(Ps)
+type = 2;
 
-load('MVC.mat', 'Tknee')
+% profile on
+if type == 1
+conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+elseif type == 2
+conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
+end
+
+% load('MVC.mat', 'Tknee')
 
 % Ps = [1:8, 10:15];
-Ps = [7,8,10:15];
+% Ps = [7,8,10:15];
+% Ps = 16:18;
 colors = hot(max(Ps));
+colors = lines(max(Ps));
 mcolor = lines(1);
 
 % Ps = 1;
@@ -30,10 +38,10 @@ ymins(14) = -5;
 %% compute time vector
 % compute mean tlin from mean Tcycle
 Tcycle(Tcycle == 0) = nan;
-mTcycle = mean(Tcycle,2, 'omitnan');
+mTcycle = mean(Tcycle(1:length(conds),Ps),2, 'omitnan');
 
 tlins = nan(9, size(Data_active,1));
-for k = 1:9
+for k = 1:length(conds)
     tlins(k,:) = linspace(0,mTcycle(k), size(Data_active,1));
 end
 
@@ -57,7 +65,8 @@ units{end+1} = ' (W)';
 ymins(end+1) = -400;
 ymaxs(end+1) = 200;
 
-%% resync the isometric
+%% resync the isometric,
+if type == 1
 for k = 7:8
     for P = Ps
         
@@ -70,18 +79,18 @@ for k = 7:8
         end
     end
 end
-
+end
 
 %% compute the phases
 tcon = zeros(size(Data_active,2),2);
 tecc = zeros(size(Data_active,2),2);
 
-for k = 1:size(Data_active,2) % conditions
+for k = 1:length(conds) % conditions
         
     % find the phases
     if ~strcmp(conds{k}(1), 'I')
-        tcon(k,:) = [find(Data_active(20:end,k,1,end-2) > 20, 1, 'first')+20 find(Data_active(:,k,1,end-2) > 20, 1, 'last')];
-        tecc(k,:) = [find(Data_active(20:end,k,1,end-2) < -20, 1, 'first')+20 find(Data_active(:,k,1,end-2) < -20, 1, 'last')];
+        tcon(k,:) = [find(Data_active(20:end,k,Ps(1),end-2) > 20, 1, 'first')+20 find(Data_active(:,k,Ps(1),end-2) > 20, 1, 'last')];
+        tecc(k,:) = [find(Data_active(20:end,k,Ps(1),end-2) < -20, 1, 'first')+20 find(Data_active(:,k,Ps(1),end-2) < -20, 1, 'last')];
         
         if tcon(k,2) < tcon(k,1)
             tcon(k,2) = size(Data_active,1);
@@ -94,7 +103,7 @@ for k = 1:size(Data_active,2) % conditions
 end
 
 %% plot!
-for k = 1:size(Data_active,2) % conditions
+for k = 1:length(conds) % conditions
     figure(k)
     set(gcf, 'Name', conds{k});
     
@@ -106,16 +115,17 @@ for k = 1:size(Data_active,2) % conditions
             patch(tlins(k,[tecc(k,:) flip(tecc(k,:))]), 10*[-100 -100 100 100], [.3 .3 .3], 'linestyle', 'none'); hold on
         end
         
-%         for P = Ps
-%             plot(tlins(k,:), Data_active(:,k,P,i),'color', colors(P,:), 'linewidth', 1); hold on
-%         end
+        for ii = 1:length(Ps)
+            P = Ps(ii);
+            plot(tlins(k,:), Data_active(:,k,P,i),'color', colors(ii,:), 'linewidth', 1); hold on
+        end
         
                
-        patch([tlins(k,:) flip(tlins(k,:))]', [mean(Data_active(:,k,Ps,i), 3, 'omitnan') + std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'); ...
-            flip(mean(Data_active(:,k,Ps,i), 3, 'omitnan')-std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'))], mcolor + [.7 .5 .25], 'linestyle', 'none'); hold on
-        
-        plot(tlins(k,:), mean(Data_active(:,k,Ps,i), 3, 'omitnan'), '-','color', mcolor, 'linewidth', 2); hold on
-        
+%         patch([tlins(k,:) flip(tlins(k,:))]', [mean(Data_active(:,k,Ps,i), 3, 'omitnan') + std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'); ...
+%             flip(mean(Data_active(:,k,Ps,i), 3, 'omitnan')-std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'))], mcolor + [.7 .5 .25], 'linestyle', 'none'); hold on
+%         
+%         plot(tlins(k,:), mean(Data_active(:,k,Ps,i), 3, 'omitnan'), '-','color', mcolor, 'linewidth', 2); hold on
+%         
         title(labs{i})
         ylabel([labs{i}, units{i}])
         yline(0,'k--')
@@ -129,7 +139,7 @@ for k = 1:size(Data_active,2) % conditions
 end
 
 % profile viewer
-return
+% return
 
 %% activation time integral
 act = Data_active(:,:,:,1);
@@ -141,9 +151,9 @@ tstart(7:8) = 1;
 tstop(7:8) = 1;
 
 Iact = nan(max(Ps),9);
-for k = 1:9
+for k = 1:length(conds)
 
-    if k < 7 || k == 9
+    if ~strcmp(conds{k}(1), 'I')
 
         % remove contraction part
         act(tstart(k):tstop(k),k,:) = 0;
@@ -161,14 +171,14 @@ end
 % for P = Ps
         
 %% calculate activation
-% A = nan(9,11,5);
+A = nan(length(conds),11,5);
 % 
 % 
-% for P = Ps
-%     for k = 1:9
+for P = Ps
+    for k = 1:length(conds)
 %         
-%         % entire cycle
-%         A(k,P,1) = mean(Data_active(:,k,P,1:3), 'all');
+        % entire cycle
+        A(k,P,1) = mean(Data_active(:,k,P,1:3), 'all');
 %         
 %         % only isometric portion
 %         A(k,P,2) = mean(Data_active(1:tstart(k),k,P,1:3), 'all');
@@ -181,8 +191,8 @@ end
 %         
 %         % non contraction
 %         A(k,P,5) = mean([Data_active(1:tstart(k),k,P,1:3); Data_active(tstop(k):end,k,P,1:3)], 'all');
-%     end
-% end
+    end
+end
 % 
 % figure(10)
 % 
@@ -200,7 +210,7 @@ W = nan(9,max(Ps),3);
 % Wneg = nan(9,11);
 
 for P = Ps
-    for k = 1:9
+    for k = 1:length(conds)
         
         Pnet = Data_active(:,k,P,end);
         
@@ -220,7 +230,7 @@ for P = Ps
 end
 
 %% calculate time shortening and lengthening
-for k = 1:9
+for k = 1:length(conds)
     if tcon(k,2) > 0
         Ts(k) = tlins(k,tcon(k,2)) - tlins(k,tcon(k,1));
         Tl(k) = tlins(k,tecc(k,2)) - tlins(k,tecc(k,1));
@@ -233,7 +243,7 @@ figure(100)
 
 for P = Ps
     nexttile
-    bar(reordercats(categorical(conds), conds), squeeze(W(:,P,:)))
+%     bar(reordercats(categorical(conds), conds), squeeze(W(:,P,:)))
     box off
     title(num2str(P))
 end
@@ -246,4 +256,4 @@ figure(101)
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-save('mechanics.mat', 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact')
+save('mechanics_v2.mat', 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A')

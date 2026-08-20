@@ -1,10 +1,11 @@
-clear all; close all; clc
+function[] = get_MVC(Ps)
+
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 fs = 1000;
 dt = 1/fs;
-visualize = 0;
+visualize = 1;
 
-Ps = 1:15;
+% Ps = 18;
 
 muscle_names = {'VL_L', 'VM_L', 'RF_L', 'VL_R', 'VM_R', 'RF_R', 'BF', 'SM', 'GL', 'GM', 'TA', 'VL_L2'};
 
@@ -22,22 +23,25 @@ names(3).chns = 7:8;
 names(4).fname = 'MVC_ANKLE';
 names(4).chns = 9:11;
 
-% when using blue box
-enums(11,:) = [4 10 16 12 11 7 15 9 13 1 14 3];
-enums(12,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
-enums(13,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
-enums(14,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
-enums(15,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
+for P = Ps
+    if P == 11
+        % when using blue box
+        enums(P,:) = [4 10 16 12 11 7 15 9 13 1 14 3];
+
+    elseif P > 11       
+        enums(P,:) = [4 10 16 12 11 7 3 9 1 1 14 4];
+    end
+end
 
 labs = {'VL_L', 'VM_L', 'RF_L', 'VL_R', 'VM_R', 'RF_R', 'BF', 'SM', 'GL', 'GM', 'TA'};
 
 m = 0;
 % MVC = nan(Ps,3,4);
 
-cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data')
-load('MVC.mat', 'MVCs')
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
+load('MVC.mat', 'MVCs', 'Tknee', 'MVC')
 
-Tknee = nan(max(Ps),2);
+% Tknee = nan(max(Ps),2);
 
 for k = 1:4
     
@@ -183,4 +187,5 @@ MVCs(6,9) = nan;
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-save('MVC.mat', 'MVCs', 'Tknee')
+save('MVC.mat', 'MVCs', 'Tknee', 'MVC')
+end
