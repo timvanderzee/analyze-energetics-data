@@ -16,13 +16,14 @@ Pmeti = Pmet(Ps,1:length(conds))./Tmax(Ps)';
 
 Pav = (W(1:length(conds),Ps,:) ./ mTcycle(1:length(conds)))./Tmax(Ps);
 
-Act = (A(1:length(conds),Ps,1) ./ mTcycle(1:length(conds)))./Tmax(Ps);
+Act = A(1:length(conds),Ps,1);
+% Act = (A(1:length(conds),Ps,1) ./ mTcycle(1:length(conds)))./Tmax(Ps);
 
 eff         = Pav./Pmeti' * 100;
 
 
 %%
-close all
+% close all
 
 colors = [.5 .5 .5; lines(1); lines(1)];
 acolors = lines(9);
@@ -36,8 +37,8 @@ for i = 2:3
     
     [~, id] = sort(x);
     
-    figure(1)
-    set(gcf, 'Name', names{i})
+%     figure(1)
+%     set(gcf, 'Name', names{i})
     
     subplot(221)
     bar(x,  mean(Act,2, 'omitnan'),'facecolor', colors(i,:)); hold on    

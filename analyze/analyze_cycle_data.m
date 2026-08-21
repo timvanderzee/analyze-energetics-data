@@ -1,11 +1,11 @@
-function[] = analyze_cycle_data(Ps)
-type = 2;
+function[] = analyze_cycle_data(Ps, type)
+% type = 2;
 
 % profile on
 if type == 1
-conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+    conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
 elseif type == 2
-conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
+    conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
 end
 
 % load('MVC.mat', 'Tknee')
@@ -115,17 +115,20 @@ for k = 1:length(conds) % conditions
             patch(tlins(k,[tecc(k,:) flip(tecc(k,:))]), 10*[-100 -100 100 100], [.3 .3 .3], 'linestyle', 'none'); hold on
         end
         
-        for ii = 1:length(Ps)
-            P = Ps(ii);
-            plot(tlins(k,:), Data_active(:,k,P,i),'color', colors(ii,:), 'linewidth', 1); hold on
+        if length(Ps) < 5
+            for ii = 1:length(Ps)
+                P = Ps(ii);
+                plot(tlins(k,:), Data_active(:,k,P,i),'color', colors(ii,:), 'linewidth', 1); hold on
+            end
+        
+        else
+               
+            patch([tlins(k,:) flip(tlins(k,:))]', [mean(Data_active(:,k,Ps,i), 3, 'omitnan') + std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'); ...
+                flip(mean(Data_active(:,k,Ps,i), 3, 'omitnan')-std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'))], mcolor + [.7 .5 .25], 'linestyle', 'none'); hold on
+
+            plot(tlins(k,:), mean(Data_active(:,k,Ps,i), 3, 'omitnan'), '-','color', mcolor, 'linewidth', 2); hold on
         end
         
-               
-%         patch([tlins(k,:) flip(tlins(k,:))]', [mean(Data_active(:,k,Ps,i), 3, 'omitnan') + std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'); ...
-%             flip(mean(Data_active(:,k,Ps,i), 3, 'omitnan')-std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'))], mcolor + [.7 .5 .25], 'linestyle', 'none'); hold on
-%         
-%         plot(tlins(k,:), mean(Data_active(:,k,Ps,i), 3, 'omitnan'), '-','color', mcolor, 'linewidth', 2); hold on
-%         
         title(labs{i})
         ylabel([labs{i}, units{i}])
         yline(0,'k--')
@@ -143,12 +146,18 @@ end
 
 %% activation time integral
 act = Data_active(:,:,:,1);
+act = Data_active(:,:,:,5);
 
 tstart =  min([tcon(:,1) tecc(:,1)],[],2);
 tstop =  1000 * ones(size(tstart));
-
 tstart(7:8) = 1;
 tstop(7:8) = 1;
+
+tstart = [tcon(1:3,1); tecc(4:6,1); 1; 1; tecc(9,1)];
+tstop = [tecc(1:3,2); tcon(4:6,2); 1000; 1000; tcon(9,end)];
+
+% if ishandle(100), close(100); end
+% close all
 
 Iact = nan(max(Ps),9);
 for k = 1:length(conds)
@@ -160,15 +169,28 @@ for k = 1:length(conds)
     end
     
     for P = Ps
-        Iact(P,k) = trapz(tlins(k,:), act(:,k,P));
+        isf = isfinite(act(:,k,P));
+        Iact(P,k) = trapz(tlins(k,isf), act(isf,k,P));
         
-        figure(100)
-        subplot(3,3,k)
-        plot(tlins(k,:), act(:,k,P)); hold on
+%         figure(100+k)
+%         subplot(211)
+%         plot(tlins(k,:), Data_active(:,k,P,4),'-', 'color', colors(P,:)); hold on
+%         
+%         subplot(212)
+%         plot(tlins(k,:), Data_active(:,k,P,5),':', 'color', colors(P,:)); hold on
+%         plot(tlins(k,:), act(:,k,P), 'color', colors(P,:)); hold on
     end
+    
+    for i = 1:2
+        subplot(2,1,i)
+        box off
+    end
+    subplot(2,1,1)
+    title(conds{k})
+    
 end
         
-% for P = Ps
+% keyboard
         
 %% calculate activation
 A = nan(length(conds),11,5);
@@ -178,7 +200,7 @@ for P = Ps
     for k = 1:length(conds)
 %         
         % entire cycle
-        A(k,P,1) = mean(Data_active(:,k,P,1:3), 'all');
+        A(k,P,1) = mean(Data_active(:,k,P,1), 'all');
 %         
 %         % only isometric portion
 %         A(k,P,2) = mean(Data_active(1:tstart(k),k,P,1:3), 'all');
@@ -202,6 +224,8 @@ end
 %     bar(A(:,:,i)')
 %     title(titles{i})
 % end
+
+% keyboard
 
 %% calculate work
 W = nan(9,max(Ps),3);
@@ -256,4 +280,4 @@ figure(101)
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-save('mechanics_v2.mat', 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A')
+save(['mechanics_v', num2str(type), '.mat'], 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A')

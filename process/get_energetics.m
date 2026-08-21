@@ -94,11 +94,13 @@ for P = Ps
     RQa = movmean(RQi, [2 0],'SamplePoints',tint);
     
     % net oxygen consumption
-    [VO2_rest(P), mid] = min(VO2a);
-    [VO2_rest(P)] = mean(VO2i(tint<5), 'omitnan');
+    VO2a3 = movmean(VO2i, [3 0],'SamplePoints',tint);
+    RQa3 = movmean(RQi, [3 0],'SamplePoints',tint);
+    [VO2_rest(P), mid] = min(VO2a3);
+%     [VO2_rest(P)] = mean(VO2i(tint<5), 'omitnan');
     
     VO2n = VO2a - VO2_rest(P);
-    RQ_rest(P) = RQa(mid);
+    RQ_rest(P) = RQa3(mid);
     
     figure(P)
     nexttile
