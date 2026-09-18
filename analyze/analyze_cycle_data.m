@@ -18,7 +18,7 @@ colors = lines(max(Ps));
 mcolor = lines(1);
 
 % Ps = 1;
-ymaxs = [50    50    50    50    50    50    50    50    50    50    50    70   300   100];
+ymaxs = [50    50    50    50    50    50    50    50    50    50    50    70   300 100 150];
 
 cd('C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset')
 load('cycle_data.mat', 'tlin', 'Data_active', 'labs', 'units','ymins', 'Tcycle')
@@ -29,6 +29,11 @@ load('cycle_data.mat', 'tlin', 'Data_active', 'labs', 'units','ymins', 'Tcycle')
 Data_active(:,:,2:6,9) = nan; % GL quality bad
 Data_active(:,:,[7 10],11) = nan; % TA quality bad
 Data_active(:,:,11,8) = nan; % SM quality bad
+
+%% replace zeros with NaNs for subjects missing ultrasound
+Faslen = Data_active(:,:,:,15);
+Faslen(Faslen == 0) = nan;
+Data_active(:,:,:,15) = Faslen;
 
 %% correct torque wrt max
 % Data_active(:,:,:,end) = Data_active(:,:,:,end) ./ reshape(max(Tknee,[],2),1,1,15) * 100;
@@ -49,16 +54,61 @@ end
 %% optional: simplify
 temp(:,:,:,1) = mean(Data_active(:,:,:,1:3), 4, 'omitnan'); % agonist
 temp(:,:,:,2) = mean(Data_active(:,:,:,4:11), 4, 'omitnan'); % antagonist
-temp(:,:,:,3:5) = Data_active(:,:,:,12:14);
+temp(:,:,:,3:6) = Data_active(:,:,:,12:15);
 
 Data_active = temp;
-labs = {'Agonist', 'Antagonist', labs{end-2:end}};
-units = {' (%)', ' (%)', units{end-2:end}};
-ymins = [-5 -5 ymins(end-2:end)];
-ymaxs = [50 50 ymaxs(end-2:end)];
+labs = {'Agonist', 'Antagonist', labs{end-3:end}};
+units = {' (%)', ' (%)', units{end-3:end}};
+ymins = [-5 -5 ymins(end-3:end)];
+ymaxs = [50 50 ymaxs(end-3:end)];
+
+%% ids
+aid = 3;
+vid = 4;
+Tid = 5;
+Lid = 6;
+Pid = 7;
+rid = 8;
+
+Fid = 9;
+Mid = 10;
 
 %% calculate power
-Data_active(:,:,:,end+1) = Data_active(:,:,:,end) .* Data_active(:,:,:,end-1) * pi/180;
+Data_active(:,:,:,Pid) = Data_active(:,:,:,Tid) .* Data_active(:,:,:,vid) * pi/180;
+
+labs{end+1} = 'Power';
+units{end+1} = ' (W)';
+ymins(end+1) = -400;
+ymaxs(end+1) = 200;
+
+%% calculate moment arm
+load('gravity.mat', 'Bs');
+Bs(Bs==0) = nan;
+
+for P = Ps
+    Data_active(:,:,P,rid) =  -polyval(Bs(P,:), Data_active(:,:,P,aid) * pi/180);
+end
+
+labs{end+1} = 'Moment arm';
+units{end+1} = ' (cm)';
+ymins(end+1) = 0;
+ymaxs(end+1) = 5;
+
+%% calculate force and muscle power
+Data_active(:,:,:,Fid) = Data_active(:,:,:,Tid) ./  (Data_active(:,:,:,rid)/100) / 1000;
+labs{end+1} = 'Force';
+units{end+1} = ' (kN)';
+ymins(end+1) = 0;
+ymaxs(end+1) = 5;
+
+for i = 1:size(Data_active,2)
+    for j = 1:size(Data_active,3)
+        vM(:,i,j) = grad5(Data_active(:,i,j,Lid), mean(diff(tlins(i,:))));
+    end
+end
+
+vM(vM==0) = nan;
+Data_active(:,:,:,Mid) = -vM .* Data_active(:,:,:,Fid); % mm/s times kN
 
 labs{end+1} = 'Power';
 units{end+1} = ' (W)';
@@ -70,7 +120,7 @@ if type == 1
 for k = 7:8
     for P = Ps
         
-        [~, ids] = max(diff(movmean(Data_active(:,k,P,end-1),100)));
+        [~, ids] = max(diff(movmean(Data_active(:,k,P,Tid),100)));
         
         for i = 1:size(Data_active,4) % variables
             
@@ -89,8 +139,8 @@ for k = 1:length(conds) % conditions
         
     % find the phases
     if ~strcmp(conds{k}(1), 'I')
-        tcon(k,:) = [find(Data_active(20:end,k,Ps(1),end-2) > 20, 1, 'first')+20 find(Data_active(:,k,Ps(1),end-2) > 20, 1, 'last')];
-        tecc(k,:) = [find(Data_active(20:end,k,Ps(1),end-2) < -20, 1, 'first')+20 find(Data_active(:,k,Ps(1),end-2) < -20, 1, 'last')];
+        tcon(k,:) = [find(Data_active(20:end,k,Ps(1),vid) > 20, 1, 'first')+20 find(Data_active(:,k,Ps(1),vid) > 20, 1, 'last')];
+        tecc(k,:) = [find(Data_active(20:end,k,Ps(1),vid) < -20, 1, 'first')+20 find(Data_active(:,k,Ps(1),vid) < -20, 1, 'last')];
         
         if tcon(k,2) < tcon(k,1)
             tcon(k,2) = size(Data_active,1);
@@ -143,6 +193,7 @@ end
 
 % profile viewer
 % return
+% keyboard
 
 %% activation time integral
 act = Data_active(:,:,:,1);
@@ -181,12 +232,12 @@ for k = 1:length(conds)
 %         plot(tlins(k,:), act(:,k,P), 'color', colors(P,:)); hold on
     end
     
-    for i = 1:2
-        subplot(2,1,i)
-        box off
-    end
-    subplot(2,1,1)
-    title(conds{k})
+%     for i = 1:2
+%         subplot(2,1,i)
+%         box off
+%     end
+%     subplot(2,1,1)
+%     title(conds{k})
     
 end
         
@@ -229,6 +280,7 @@ end
 
 %% calculate work
 W = nan(9,max(Ps),3);
+Wm = nan(9, max(Ps), 3);
 
 % Wpos = nan(9,11);
 % Wneg = nan(9,11);
@@ -236,7 +288,7 @@ W = nan(9,max(Ps),3);
 for P = Ps
     for k = 1:length(conds)
         
-        Pnet = Data_active(:,k,P,end);
+        Pnet = Data_active(:,k,P,Pid);
         
         isf = isfinite(Pnet);
         
@@ -246,12 +298,52 @@ for P = Ps
         Ppos(Ppos<0) = 0;
         Pneg(Pneg>0) = 0;
         
+        Pmus = Data_active(:,k,P,Mid);
+        isfm = isfinite(Pmus);
+        
+        Pmpos = Pmus;
+        Pmneg = Pmus;
+        
+        Pmpos(Pmpos<0) = 0;
+        Pmneg(Pmneg>0) = 0;
+        
         W(k,P,1) = trapz(tlins(k,isf), Pnet(isf));
         W(k,P,2) = trapz(tlins(k,isf), Ppos(isf));
         W(k,P,3) = trapz(tlins(k,isf), Pneg(isf));
         
+        Wm(k,P,1) = trapz(tlins(k,isfm), Pmus(isfm));
+        Wm(k,P,2) = trapz(tlins(k,isfm), Pmpos(isfm));
+        Wm(k,P,3) = trapz(tlins(k,isfm), Pmneg(isfm));
+        
     end
 end
+
+Wm(Wm==0) = nan;
+
+%% compare muscle and joint work
+        figure(100)
+        
+for j = 1:3
+    subplot(1,3,j)
+    
+    for P = Ps
+
+        plot(W(:,P,j), Wm(:,P,j), '.', 'markersize', 10); hold on
+    end
+    
+    plot([-500 500], [-500 500], 'k-')
+    axis equal
+    axis([min(W(:,:,j), [], 'all') max(W(:,:,j), [], 'all') min(Wm(:,:,j), [], 'all') max(Wm(:,:,j), [], 'all')])
+    
+    
+    xlabel('Joint work (J)')
+    ylabel('Muscle work (J)')
+    box off
+    grid on
+end
+
+
+keyboard
 
 %% calculate time shortening and lengthening
 for k = 1:length(conds)

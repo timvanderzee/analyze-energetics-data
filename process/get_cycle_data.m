@@ -17,11 +17,11 @@ for i = 1:11 % max number of EMG channels
     ymaxs(i) = 50;
 end
 
-labs = [labs, {'Angle', 'Velocity','Torque'}];
-units = [units, {' (deg)', ' (deg/s)', ' (N-m)'}];
+labs = [labs, {'Angle', 'Velocity','Torque', 'Length'}];
+units = [units, {' (deg)', ' (deg/s)', ' (N-m)', ' (mm)'}];
 
-ymins = [ymins, 0 -300 -50];
-ymaxs = [ymaxs, 70 300 100];
+ymins = [ymins, 0 -300 -50 50];
+ymaxs = [ymaxs, 70 300 100 150];
 
 
 % pre-allocate
@@ -34,7 +34,7 @@ K = 1000;
 
 %% Load existing data
 cd('C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset')
-load('cycle_data.mat', 'tlin', 'Data_active', 'Data_passive', 'labs', 'units','ymins', 'Tcycle')
+load('cycle_data.mat', 'tlin', 'Data_active', 'Data_passive', 'Tcycle')
 
 %% Process
 
@@ -65,6 +65,10 @@ for P = Ps
             %             Data = [EMGn Kangle Vel Tknee];
             
             Data = [data(trial).EMG data(trial).Angle data(trial).Velocity data(trial).Torque];
+            
+            if isfield(data, 'Faslen')
+                Data(:,end+1) = data(trial).Faslen;
+            end
             
             %% correct for inertia
             % only this one because wrong passive trial
@@ -212,7 +216,7 @@ for P = Ps
             if ~strcmp(conds{trial}(1), 'I') && ~(P == 11 && trial == 4)
                 fs = 1./mean(diff(tlin));
 
-                [X, lags]= xcorr(Data_active(:,ks, P, i-1), Data_passive(:,ks, P, i-1));
+                [X, lags]= xcorr(Data_active(:,ks, P, 13), Data_passive(:,ks, P, 13));
                 [~, maxid] = max(X);
                 tds = lags(maxid) / fs;
 
@@ -226,8 +230,8 @@ for P = Ps
                 end
 
                 % correct torque
-                activeData(:,:,i) = activeData(:,:,i) - Data_passive(:,ks, P, i);
-                Data_active(:,ks, P, i)  = mean(activeData(:,:,i), 2, 'omitnan');
+                activeData(:,:,14) = activeData(:,:,14) - Data_passive(:,ks, P, 14);
+                Data_active(:,ks, P, 14)  = mean(activeData(:,:,14), 2, 'omitnan');
             end
             
 %             figure(10)

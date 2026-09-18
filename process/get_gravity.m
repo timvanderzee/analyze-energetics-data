@@ -4,7 +4,7 @@ function[] = get_gravity(Ps)
 % As =  nan(length(Ps),3);
 
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-load('gravity.mat', 'As')
+load('gravity.mat', 'As', 'Bs')
 
 fs = 1000;
 dt = 1/fs;
@@ -15,13 +15,20 @@ cfunc = @(a,x,y) sum((y - func(a,x)).^2);
 % as = linspace(-pi/2, pi, 100);
 as = linspace(-90, 180, 100);
 
+datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
+
 for P = Ps
     disp(P)
+
+    subject_folder = fullfile(datafolder, ['P', num2str(P)]);
     
-    subject_folder = ['C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset\p', num2str(P), '\cybex'];
+    %% Cybex files
+    cybex_folder = fullfile(subject_folder, 'cybex');
     
-    if isfolder(subject_folder)
-        cd(subject_folder)
+%     subject_folder = ['C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset\p', num2str(P), '\cybex'];
+    
+    if isfolder(cybex_folder)
+        cd(cybex_folder)
         filename = ['p', num2str(P), '_ROM.c3d'];
         
         if exist(filename, 'file')
@@ -121,11 +128,74 @@ for P = Ps
                 
             end
         end
+        
+        %% ultrasound
+        ultrasound_folder = fullfile(subject_folder, 'ultrasound');
+%         delay = 2;
+        
+        if isfolder(ultrasound_folder)
+            cd(ultrasound_folder)
+            filename = ['p', num2str(P), '_ROM.mat'];
+            
+            
+            load(filename, 'Time', 'FL');
+
+            Faslen = interp1(Time, FL, t) / 10; % mm -> cm
+            
+            Faslen(t > 100) = nan;
+            
+            if P == 10
+                Faslen(t > 50 & t < 70) = nan;
+            elseif P == 11
+                Faslen(t > 120) = nan;
+            elseif P == 15
+                Faslen(t > 90) = nan;
+            end
+            
+            isf = isfinite(Faslen);
+            p0 = polyfit(Kangle(id(:)&isf(:)) * pi/180, Faslen(id(:)&isf(:)), 2);
+            
+            p = fmincon(@(p) fitp(p, Kangle(id(:)&isf(:)) * pi/180,  Faslen(id(:)&isf(:))), p0, [1 0 0; 0 1 0], [0 -2]);
+            
+            pd = polyder(p);
+            
+            figure(2)
+            subplot(221)
+            plot(t, Kangle); hold on
+            plot(t(id), Kangle(id), '.'); hold on
+            
+            subplot(222)
+            plot(t, Faslen); hold on
+            plot(t(id), Faslen(id),'.'); hold on
+            
+            subplot(223)
+            plot(Kangle(id) * pi/180, Faslen(id), '.'); hold on
+            plot((0:80)* pi/180, polyval(p, (0:80)* pi/180));
+            
+            subplot(224)
+            plot((0:80)* pi/180, polyval(pd, (0:80)* pi/180));
+            
+            Bs(P,:) = pd;
+            
+        end
+                
     end
 end
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-save('gravity.mat', 'As')
+save('gravity.mat', 'As', 'Bs')
 
 end
+
+
+%%
+function[cost] = fitp(p, x, y)
+
+yf = polyval(p, x);
+cost = sum((y(:)-yf(:)).^2);
+
+end
+
+
+

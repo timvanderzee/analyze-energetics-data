@@ -1,4 +1,4 @@
-function[] = analyze_energetics(Ps)
+function[eff, eff_cor] = analyze_energetics(Ps)
 
 Tmax = 1/.374; % placeholder
 
@@ -26,6 +26,7 @@ N = size(Piso,1);
 % fiso = repmat(Tiso / (Tmax/2), N,1);
 fiso = [Iact(Ps,1:3)./Iact(Ps,8) Iact(Ps,4:7)./Iact(Ps,7) Iact(Ps,8)./Iact(Ps,8) Iact(Ps,9)./Iact(Ps,7)] * 1;
 
+
 % portion of metabolic rate due to contraction
 Pcor = Pmet - [Piso(:,2) .* fiso(:,1:3)  Piso(:,1) .* fiso(:,4:7) Piso(:,2) .* fiso(:,8) Piso(:,1) .* fiso(:,9)];
 
@@ -50,7 +51,7 @@ eff_cor     = Pav./ Pcor' * 100;
 %% figure 1 - uncorrected
 figure(1)
 % close all
-acolors = lines(9);
+acolors = lines(20);
 colors = lines(5);
 names = {'Net','Positive', 'Negative'};
 

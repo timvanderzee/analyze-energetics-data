@@ -50,10 +50,14 @@ for P = Ps
         EMGchannels = [4 10 8 6 12 7 5 9 13 11 14];
     end
        
-    subject_folder = [datafolder, '\P', num2str(P), '\cybex'];
+    subject_folder = fullfile(datafolder, ['P', num2str(P)]);
     
-    if isfolder(subject_folder)
-        cd(subject_folder)
+    %% Cybex files
+    cybex_folder = fullfile(subject_folder, 'cybex');
+    
+    
+    if isfolder(cybex_folder)
+        cd(cybex_folder)
         
         filenames = [];
         for i = 1:length(conds)
@@ -65,6 +69,26 @@ for P = Ps
                 filenames{i} = [];
             end
         end
+    end
+    
+    %% Ultrasound files
+   ultrasound_folder = fullfile(subject_folder, 'ultrasound');
+
+    if isfolder(ultrasound_folder)
+        cd(ultrasound_folder)
+
+        US_filenames = [];
+        for i = 1:length(conds)
+            files = dir(['*', conds{i}, '_tracked.mat']);
+
+            if ~isempty(files)
+                US_filenames{i} = fullfile(files.folder, files.name);
+            else
+                US_filenames{i} = [];
+            end
+        end
+    end
+                    
         
        
         % velocity conditions
@@ -164,18 +188,34 @@ for P = Ps
                 
                 %% subtract gravity
                 FData(:,3) = FData(:,3) - (As(P,1)*cosd(FData(:,1)-As(P,2)) + As(P,3));
-                           
+                
                 %% downsample everything                
                 data(trial).Time        = t(1:dsf:end);
                 data(trial).EMG         = EMGn(1:dsf:end,:);
                 data(trial).Angle       = FData(1:dsf:end,1);
                 data(trial).Velocity    = FData(1:dsf:end,2);
                 data(trial).Torque      = FData(1:dsf:end,3);
-
+                
             end
         end
-    end
+            
+        %% ultrasound
+        delay = 2; % I think?
+        
+        for trial = 1:length(US_filenames)
+            disp(trial)
+            if ~isempty(US_filenames{trial})
+
+                load(US_filenames{trial}, 'Fdat');
+
+                data(trial).Faslen = interp1(Fdat.Region.Time, Fdat.Region.FL, data(trial).Time-delay);
+            end
+        end
+
+end
     
+    %% save
+    cd(cybex_folder)
     save(['P', num2str(P), '_data.mat'], 'data', 'conds');
     
 end

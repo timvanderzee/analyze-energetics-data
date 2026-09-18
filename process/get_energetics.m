@@ -9,7 +9,7 @@ colors = lines(8);
 % 
 % conds = {'MVC_QCEPS_L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
 
-for i = Ps
+for i = 1:max(Ps)
     Sdata(i).tstop = 10:10:90;
 end
 
@@ -22,6 +22,10 @@ Sdata(5).tstop = [(11:10:81), 92];
 Sdata(8).tstop = [10, 30, 43:10:103]; % made up, need to verify
 
 Sdata(16).tstop = 10:10:80;
+
+% new file
+Sdata(20).tstop(end-2:end) = [69 79 90];
+Sdata(21).tstop = 11:10:91;
 
 % order (relevant for energetics)
 Sdata(1).order = [8 2 9 5 6 4 1 7 3];
@@ -43,6 +47,8 @@ Sdata(16).order = [8 3 6 7 5 1 2 4 9];
 Sdata(17).order = [ 6     1     5     3     7     2     8     4];
 Sdata(18).order = [ 8     6     4     5     1     7     3     2];
 Sdata(19).order = [7     6     3     8     5     4     1     2];
+Sdata(20).order = [ 4     6     2     7     3     8     5     1];
+Sdata(21).order = [ 4     5     8     6     3     7     1     2];
 
 % pre-allocate
 N = 9;
@@ -64,13 +70,20 @@ for P = Ps
     
     if isfolder(foldername)
     cd(foldername)
-    filename = ['P',num2str(P), '.xlsx'];
     
-    time = readmatrix(filename,   "OutputType",  "datetime", "Range", 'J:J');
-    VO2r = readmatrix(filename, "Range", 'O:O');
-    RQr = readmatrix(filename, "Range", 'Q:Q');
+    if P ~= 20
+        filename = ['P',num2str(P), '.xlsx'];
+
+        time = readmatrix(filename,   "OutputType",  "datetime", "Range", 'J:J');
+        VO2r = readmatrix(filename, "Range", 'O:O');
+        RQr = readmatrix(filename, "Range", 'Q:Q');
+
+        tr = hour(time)*60 + minute(time) + second(time)/60;
     
-    tr = hour(time)*60 + minute(time) + second(time)/60;
+    else
+        load(['P',num2str(P), '.mat'], 'tr', 'VO2r', 'RQr')
+    end
+    
     tint = 0:(1/60):max(tr);
     
     % get finite values

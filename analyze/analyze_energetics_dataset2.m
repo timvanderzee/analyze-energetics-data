@@ -1,4 +1,4 @@
-function[] = analyze_energetics_dataset2(Ps)
+function[eff] = analyze_energetics_dataset2(Ps)
 
 
 conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
@@ -18,6 +18,8 @@ Pav = (W(1:length(conds),Ps,:) ./ mTcycle(1:length(conds)))./Tmax(Ps);
 
 Act = A(1:length(conds),Ps,1);
 % Act = (A(1:length(conds),Ps,1) ./ mTcycle(1:length(conds)))./Tmax(Ps);
+
+% Pmeti = Pmeti - 25;
 
 eff         = Pav./Pmeti' * 100;
 
@@ -87,6 +89,8 @@ for i = 2:3
     end
     
 end
+
+legend('\mu', '\sigma', '1', '2', '3', '4', '5','6', 'location', 'best')
 return
 
 %%
