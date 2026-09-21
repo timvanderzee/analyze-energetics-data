@@ -2,7 +2,7 @@ clear all; close all; clc
 addpath(genpath('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\analyze'))
 addpath(genpath('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\process'))
 
-Ps = 15;
+Ps = 14;
 
 %% gravity
 get_gravity(Ps);
@@ -39,15 +39,27 @@ if ishandle(1), close(1); end
 if ishandle(2), close(2); end
 
 % Ps = [7:8, 10:15];
-Ps = [1:6];
-[eff1a_uc, eff1a] = analyze_energetics(Ps);
+% Ps = [1:6];
+% [eff1a_uc, eff1a] = analyze_energetics(Ps);
 
-Ps = [7:8, 10:15];
-[eff1b_uc, eff1b] = analyze_energetics(Ps);
+% Ps = [7:8, 10:15];
+Ps = [10:15];
+[eff1b_uc, eff1b, vm] = analyze_energetics(Ps);
 
-Ps = [1:8, 10:15];
-[eff1_uc, eff1] = analyze_energetics(Ps);
+% Ps = [1:8, 10:15];
+% [eff1_uc, eff1] = analyze_energetics(Ps);
 
+%%
+figure(10)
+subplot(121)
+plot(-mean(vm,2), mean(eff1b_uc(:,:,1),2), 'o'); hold on
+box off
+grid on
+
+subplot(122)
+plot(-mean(vm,2), mean(eff1b(:,:,1),2, 'omitnan'), 'o')
+box off
+grid on
 %% plot - dataset 2
 Ps = 16:21;
 close all

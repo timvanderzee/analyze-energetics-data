@@ -79,7 +79,7 @@ for P = Ps
 
         US_filenames = [];
         for i = 1:length(conds)
-            files = dir(['*', conds{i}, '_tracked.mat']);
+            files = dir(['*', conds{i}, '.mat']);
 
             if ~isempty(files)
                 US_filenames{i} = fullfile(files.folder, files.name);
@@ -206,9 +206,9 @@ for P = Ps
             disp(trial)
             if ~isempty(US_filenames{trial})
 
-                load(US_filenames{trial}, 'Fdat');
+                load(US_filenames{trial}, 'FL', 'Time');
 
-                data(trial).Faslen = interp1(Fdat.Region.Time, Fdat.Region.FL, data(trial).Time-delay);
+                data(trial).Faslen = interp1(Time, FL, data(trial).Time);
             end
         end
 

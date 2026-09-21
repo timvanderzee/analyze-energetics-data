@@ -63,18 +63,18 @@ ymins = [-5 -5 ymins(end-3:end)];
 ymaxs = [50 50 ymaxs(end-3:end)];
 
 %% ids
-aid = 3;
-vid = 4;
+aid = 3; % angle
+wid = 4; % angular velocity
 Tid = 5;
 Lid = 6;
 Pid = 7;
-rid = 8;
-
-Fid = 9;
-Mid = 10;
+% rid = 8; % moment arm
+vid = 8; % muscle velocity
+Fid = 9; % force
+Mid = 10; % muscle power
 
 %% calculate power
-Data_active(:,:,:,Pid) = Data_active(:,:,:,Tid) .* Data_active(:,:,:,vid) * pi/180;
+Data_active(:,:,:,Pid) = Data_active(:,:,:,Tid) .* Data_active(:,:,:,wid) * pi/180;
 
 labs{end+1} = 'Power';
 units{end+1} = ' (W)';
@@ -82,25 +82,20 @@ ymins(end+1) = -400;
 ymaxs(end+1) = 200;
 
 %% calculate moment arm
-load('gravity.mat', 'Bs');
-Bs(Bs==0) = nan;
-
-for P = Ps
-    Data_active(:,:,P,rid) =  -polyval(Bs(P,:), Data_active(:,:,P,aid) * pi/180);
-end
-
-labs{end+1} = 'Moment arm';
-units{end+1} = ' (cm)';
-ymins(end+1) = 0;
-ymaxs(end+1) = 5;
+% load('gravity.mat', 'Bs');
+% Bs(Bs==0) = nan;
+% 
+% for P = Ps
+%     Data_active(:,:,P,rid) =  -polyval(Bs(P,:), Data_active(:,:,P,aid) * pi/180);
+% end
+% 
+% labs{end+1} = 'Moment arm';
+% units{end+1} = ' (cm)';
+% ymins(end+1) = 0;
+% ymaxs(end+1) = 5;
 
 %% calculate force and muscle power
-Data_active(:,:,:,Fid) = Data_active(:,:,:,Tid) ./  (Data_active(:,:,:,rid)/100) / 1000;
-labs{end+1} = 'Force';
-units{end+1} = ' (kN)';
-ymins(end+1) = 0;
-ymaxs(end+1) = 5;
-
+% r = (Data_active(:,:,:,rid)/100);
 for i = 1:size(Data_active,2)
     for j = 1:size(Data_active,3)
         vM(:,i,j) = grad5(Data_active(:,i,j,Lid), mean(diff(tlins(i,:))));
@@ -108,6 +103,23 @@ for i = 1:size(Data_active,2)
 end
 
 vM(vM==0) = nan;
+
+Data_active(:,:,:,vid) = vM;
+labs{end+1} = 'Velocity';
+units{end+1} = ' (mm/s)';
+ymins(end+1) = -200;
+ymaxs(end+1) = 200;
+
+%% force
+r = (2 + .831 * Data_active(:,:,:,aid) * pi/180) / 100;
+
+Data_active(:,:,:,Fid) = Data_active(:,:,:,Tid) ./  r / 1000;
+labs{end+1} = 'Force';
+units{end+1} = ' (kN)';
+ymins(end+1) = 0;
+ymaxs(end+1) = 5;
+
+%% power
 Data_active(:,:,:,Mid) = -vM .* Data_active(:,:,:,Fid); % mm/s times kN
 
 labs{end+1} = 'Power';
@@ -139,8 +151,8 @@ for k = 1:length(conds) % conditions
         
     % find the phases
     if ~strcmp(conds{k}(1), 'I')
-        tcon(k,:) = [find(Data_active(20:end,k,Ps(1),vid) > 20, 1, 'first')+20 find(Data_active(:,k,Ps(1),vid) > 20, 1, 'last')];
-        tecc(k,:) = [find(Data_active(20:end,k,Ps(1),vid) < -20, 1, 'first')+20 find(Data_active(:,k,Ps(1),vid) < -20, 1, 'last')];
+        tcon(k,:) = [find(Data_active(20:end,k,Ps(1),wid) > 20, 1, 'first')+20 find(Data_active(:,k,Ps(1),wid) > 20, 1, 'last')];
+        tecc(k,:) = [find(Data_active(20:end,k,Ps(1),wid) < -20, 1, 'first')+20 find(Data_active(:,k,Ps(1),wid) < -20, 1, 'last')];
         
         if tcon(k,2) < tcon(k,1)
             tcon(k,2) = size(Data_active,1);
@@ -321,7 +333,7 @@ end
 Wm(Wm==0) = nan;
 
 %% compare muscle and joint work
-        figure(100)
+figure(100)
         
 for j = 1:3
     subplot(1,3,j)
@@ -335,7 +347,6 @@ for j = 1:3
     axis equal
     axis([min(W(:,:,j), [], 'all') max(W(:,:,j), [], 'all') min(Wm(:,:,j), [], 'all') max(Wm(:,:,j), [], 'all')])
     
-    
     xlabel('Joint work (J)')
     ylabel('Muscle work (J)')
     box off
@@ -343,8 +354,33 @@ for j = 1:3
 end
 
 
-keyboard
+% keyboard
 
+%% calculate effective velocity
+vm = nan(max(Ps),length(conds));
+
+tstart = [tcon(1:3,1); tecc(4:6,1); 1; 1; tcon(9,1)];
+tstop = [tcon(1:3,2); tecc(4:6,2); 1000; 1000; tcon(9,end)];
+
+for P = Ps
+    for k = 1:length(conds)
+
+        vm(P,k) = mean(Data_active(tstart(k):tstop(k),k,P,vid));
+%         
+%         figure(200)
+%         subplot(3,3,k)
+%         plot(Data_active(:,k,P,Lid)); hold on;
+
+    end
+end
+
+% for k = 1:length(conds)
+%     subplot(3,3,k)
+%     xline(tstart(k), 'k--')
+%     xline(tstop(k), 'r--')
+%      box off
+% end
+        
 %% calculate time shortening and lengthening
 for k = 1:length(conds)
     if tcon(k,2) > 0
@@ -372,4 +408,4 @@ figure(101)
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-save(['mechanics_v', num2str(type), '.mat'], 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A')
+save(['mechanics_v', num2str(type), '.mat'], 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A', 'vm', 'Wm')

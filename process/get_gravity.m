@@ -150,6 +150,7 @@ for P = Ps
                 Faslen(t > 120) = nan;
             elseif P == 15
                 Faslen(t > 90) = nan;
+
             end
             
             isf = isfinite(Faslen);

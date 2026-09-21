@@ -2,7 +2,7 @@ clear all; close all; clc
 
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
-Ps = [10, 11, 12, 15];
+Ps = 14;
 delay = 2;
 
 for P = Ps

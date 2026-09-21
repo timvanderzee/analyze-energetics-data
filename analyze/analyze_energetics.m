@@ -1,4 +1,4 @@
-function[eff, eff_cor] = analyze_energetics(Ps)
+function[eff, eff_cor, vels] = analyze_energetics(Ps)
 
 Tmax = 1/.374; % placeholder
 
@@ -9,8 +9,10 @@ Tmax = 2;
 % Ps = 16:18;
 
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-load('mechanics_v1.mat', 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A')
+load('mechanics_v1.mat', 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A', 'Wm', 'vm')
 load('metabolics.mat', 'Pmet', 'Sdata')
+
+vels = vm(Ps,:)';
 
 Pmet = Pmet(Ps,:);
 conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
@@ -35,6 +37,7 @@ Pcor2 = Pmet + mean(Pmet(:), 'omitnan') - mean(Pmet,2);
 Act = A(1:length(conds),Ps,1);
 
 %% compute efficiency
+% W = Wm;
 Pav = W(:,Ps,:) ./ mTcycle;
 
 Pmcor(:,:,1) = W(1:length(Tl),Ps,1) ./ (Tl+Ts)'; % net
