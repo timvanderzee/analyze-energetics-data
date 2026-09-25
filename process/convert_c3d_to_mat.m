@@ -51,6 +51,8 @@ for P = Ps
     end
        
     subject_folder = fullfile(datafolder, ['P', num2str(P)]);
+    filenames = [];
+    US_filenames = [];
     
     %% Cybex files
     cybex_folder = fullfile(subject_folder, 'cybex');

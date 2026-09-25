@@ -1,4 +1,4 @@
-function[eff] = analyze_energetics_dataset2(Ps)
+function[eff] = analyze_energetics_dataset2(Ps, Pi)
 
 
 conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
@@ -28,7 +28,7 @@ eff         = Pav./Pmeti' * 100;
 % close all
 
 colors = [.5 .5 .5; lines(1); lines(1)];
-acolors = lines(9);
+acolors = parula(length(Ps));
 
 names = {'Net','Positive', 'Negative'};
 ylabs = {'Activation', 'Metabolic rate (W)', 'Work rate (W)', 'Efficiency (%)'};
@@ -49,7 +49,7 @@ for i = 2:3
 
 
      for j = 1:size(Pmeti,1)
-        plot(x(id), squeeze(Act(id,j)), '.:', 'color', acolors(j+1,:))
+        plot(x(id), squeeze(Act(id,j)), '.:', 'color', acolors(j,:))
      end
     
     subplot(222)
@@ -58,7 +58,7 @@ for i = 2:3
     title('Metabolic rate')
    
     for j = 1:size(Pmeti,1)
-        plot(x(id), Pmeti(j,id), '.:', 'color', acolors(j+1,:))
+        plot(x(id), Pmeti(j,id), '.:', 'color', acolors(j,:))
     end
     
     subplot(223)
@@ -68,7 +68,7 @@ for i = 2:3
 
 
      for j = 1:size(Pmeti,1)
-        plot(x(id), squeeze(Pav(id,j,i)), '.:', 'color', acolors(j+1,:))
+        plot(x(id), squeeze(Pav(id,j,i)), '.:', 'color', acolors(j,:))
      end
     
     subplot(224)
@@ -78,7 +78,13 @@ for i = 2:3
     title('Efficiency')
 
      for j = 1:size(Pmeti,1)
-        plot(x(id), squeeze(eff(id,j,i)), '.:', 'color', acolors(j+1,:))
+         if (j + 15) == Pi
+             lw = 1;
+         else
+             lw = .5;
+         end
+         
+        plot(x(id), squeeze(eff(id,j,i)), '.:', 'color', acolors(j,:), 'linewidth', lw)
      end
     
     for j = 1:4
@@ -90,7 +96,7 @@ for i = 2:3
     
 end
 
-legend('\mu', '\sigma', '1', '2', '3', '4', '5','6', 'location', 'best')
+legend('\mu', '\sigma', '1', '2', '3', '4', '5','6', '7', 'location', 'best')
 return
 
 %%

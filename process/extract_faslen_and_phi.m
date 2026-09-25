@@ -1,8 +1,8 @@
-clear all; close all; clc
+function[] = extract_faslen_and_phi(Ps)
 
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
-Ps = 14;
+% Ps = 16;
 delay = 2;
 
 for P = Ps
@@ -31,4 +31,6 @@ for P = Ps
             save(newname, 'FL', 'PEN', 'Time')
         end
     end
+end
+
 end

@@ -5,11 +5,11 @@ datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
 colors = lines(8);
 
-% Ps = 18;
-% 
-% conds = {'MVC_QCEPS_L', 'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+if Ps < 16
+    conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+end
 
-for i = 1:max(Ps)
+for i = 1:30
     Sdata(i).tstop = 10:10:90;
 end
 
@@ -49,6 +49,7 @@ Sdata(18).order = [ 8     6     4     5     1     7     3     2];
 Sdata(19).order = [7     6     3     8     5     4     1     2];
 Sdata(20).order = [ 4     6     2     7     3     8     5     1];
 Sdata(21).order = [ 4     5     8     6     3     7     1     2];
+Sdata(22).order = [3     7     1     4     2     8     6     5];
 
 % pre-allocate
 N = 9;
@@ -121,12 +122,16 @@ for P = Ps
     plot(tint, VO2n,'-', 'color', colors(2,:), 'linewidth', 2)
     title('VO2')
     
+    
+    
     yline(0,'k--')
     
     tstop = Sdata(P).tstop;
     VO2m = nan(1, length(tstop));
     for i = 1:length(tstop)
         xline(tstop(i), 'k--')
+        text(tstop(i), 1200, conds{Sdata(P).order(i)}, 'fontsize', 8, 'HorizontalAlignment', 'center')
+        
         VO2m(i) = interp1(tint, VO2n, tstop(i));
         plot(tstop(i), VO2m(i), 'ko')
     end

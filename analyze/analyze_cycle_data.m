@@ -1,11 +1,15 @@
-function[] = analyze_cycle_data(Ps, type)
+function[] = analyze_cycle_data(Ps, type, Pi)
 % type = 2;
 
 % profile on
 if type == 1
     conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+    vels = [60 120 240 -60 -120 -240 0 0 240];
+    
 elseif type == 2
     conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
+    vels = [30 60 120 240 -30 -60 -120 -240 0 0 240];
+    
 end
 
 % load('MVC.mat', 'Tknee')
@@ -15,7 +19,8 @@ end
 % Ps = 16:18;
 colors = hot(max(Ps));
 colors = lines(max(Ps));
-mcolor = lines(1);
+mcolors = lines(2);
+mcolor = mcolors(1,:);
 
 % Ps = 1;
 ymaxs = [50    50    50    50    50    50    50    50    50    50    50    70   300 100 150];
@@ -127,20 +132,30 @@ units{end+1} = ' (W)';
 ymins(end+1) = -400;
 ymaxs(end+1) = 200;
 
-%% resync the isometric,
+%% resync the isometric and 30 deg/s
 if type == 1
-for k = 7:8
-    for P = Ps
-        
-        [~, ids] = max(diff(movmean(Data_active(:,k,P,Tid),100)));
-        
-        for i = 1:size(Data_active,4) % variables
-            
-%             Data_passive(:,k,P,i) = [Data_passive((ids):end,k,P,i); Data_passive(1:(ids-1),k,P,i)];
-            Data_active(:,k,P,i) = [Data_active((ids):end,k,P,i); Data_active(1:(ids-1),k,P,i)];
+    for k = 7:8
+        for P = Ps
+
+            [~, ids] = max(diff(movmean(Data_active(:,k,P,Tid),100)));
+
+            for i = 1:size(Data_active,4) % variables
+
+    %             Data_passive(:,k,P,i) = [Data_passive((ids):end,k,P,i); Data_passive(1:(ids-1),k,P,i)];
+                Data_active(:,k,P,i) = [Data_active((ids):end,k,P,i); Data_active(1:(ids-1),k,P,i)];
+            end
         end
     end
-end
+else
+    for k = [1 5]
+        for P = Ps
+            [~, ids] = min(movmean(sign(vels(k)) * Data_active(:,k,P,aid),100));
+
+            for i = 1:size(Data_active,4) % variables
+                Data_active(:,k,P,i) = [Data_active((ids):end,k,P,i); Data_active(1:(ids-1),k,P,i)];
+            end
+        end
+    end
 end
 
 %% compute the phases
@@ -151,16 +166,21 @@ for k = 1:length(conds) % conditions
         
     % find the phases
     if ~strcmp(conds{k}(1), 'I')
-        tcon(k,:) = [find(Data_active(20:end,k,Ps(1),wid) > 20, 1, 'first')+20 find(Data_active(:,k,Ps(1),wid) > 20, 1, 'last')];
-        tecc(k,:) = [find(Data_active(20:end,k,Ps(1),wid) < -20, 1, 'first')+20 find(Data_active(:,k,Ps(1),wid) < -20, 1, 'last')];
         
-        if tcon(k,2) < tcon(k,1)
-            tcon(k,2) = size(Data_active,1);
-        end
-        
-        if tecc(k,2) < tecc(k,1)
-            tecc(k,2) = size(Data_active,1);
-        end
+        tcon(k,:) = [find(Data_active(10:end,k,Ps(1),wid) > 20, 1, 'first')+10 
+                     find(Data_active(:,k,Ps(1),wid) > 20, 1, 'last')];
+                 
+        tecc(k,:) = [find(Data_active(10:end,k,Ps(1),wid) < -20, 1, 'first')+10 
+                     find(Data_active(:,k,Ps(1),wid) < -20, 1, 'last')];
+
+%          if abs(vels) == 30
+%         if tcon(k,2) < tcon(k,1)
+%             tcon(k,2) = size(Data_active,1);
+%         end
+%         
+%         if tecc(k,2) < tecc(k,1)
+%             tecc(k,2) = size(Data_active,1);
+%         end
     end
 end
 
@@ -189,6 +209,11 @@ for k = 1:length(conds) % conditions
                 flip(mean(Data_active(:,k,Ps,i), 3, 'omitnan')-std(Data_active(:,k,Ps,i), 1, 3, 'omitnan'))], mcolor + [.7 .5 .25], 'linestyle', 'none'); hold on
 
             plot(tlins(k,:), mean(Data_active(:,k,Ps,i), 3, 'omitnan'), '-','color', mcolor, 'linewidth', 2); hold on
+            
+            for ii = 1:length(Pi)
+                P = Pi(ii);
+                plot(tlins(k,:), Data_active(:,k,P,i),'color', mcolors(2,:), 'linewidth', 1); hold on
+            end
         end
         
         title(labs{i})
@@ -209,7 +234,7 @@ end
 
 %% activation time integral
 act = Data_active(:,:,:,1);
-act = Data_active(:,:,:,5);
+% act = Data_active(:,:,:,5);
 
 tstart =  min([tcon(:,1) tecc(:,1)],[],2);
 tstop =  1000 * ones(size(tstart));
@@ -359,8 +384,13 @@ end
 %% calculate effective velocity
 vm = nan(max(Ps),length(conds));
 
-tstart = [tcon(1:3,1); tecc(4:6,1); 1; 1; tcon(9,1)];
-tstop = [tcon(1:3,2); tecc(4:6,2); 1000; 1000; tcon(9,end)];
+if type == 1
+    tstart = [tcon(1:3,1); tecc(4:6,1); 1; 1; tcon(9,1)];
+    tstop = [tcon(1:3,2); tecc(4:6,2); 1000; 1000; tcon(9,end)];
+else
+    tstart = [tcon(1:4,1); tecc(5:8,1)];
+    tstop = [tcon(1:4,2); tecc(5:8,2)];
+end
 
 for P = Ps
     for k = 1:length(conds)

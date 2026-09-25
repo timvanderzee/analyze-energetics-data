@@ -1,15 +1,15 @@
-clear all; close all; clc
+function[] = estimate_momarm(Ps)
 
 fs = 1000;
 dt = 1/fs;
 
 datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
-Ps = 10:15;
+% Ps = 16;
 
 conds = {'_nulhoek', '_ROM'};
 
-colors = lines(15);
+colors = lines(20);
 
 FLm = nan(15, 13, 2);
 KAm = nan(15, 13, 2);
@@ -132,9 +132,9 @@ for P = Ps
     end
 end
 
-
+return
 %% combine
-close all
+% close all
 FLs = [FLm(:,:,2) FLm(:,1,1)];
 KAs = [KAm(:,:,2) KAm(:,1,1)];
 
@@ -150,10 +150,13 @@ subplot(121)
 plot(mean(KAs, 'omitnan'), mean(FLs, 'omitnan'),'o-'); hold on
 plot(mean(KAs(:,id1:id2), 'omitnan'), mean(FLs(:,id1:id2), 'omitnan'),'o-')
 
-% p = polyfit(mean(KAs(:,id1:id2), 'omitnan'), mean(FLs(:,id1:id2), 'omitnan'),2);
+p0 = polyfit(mean(KAs(:,id1:id2), 'omitnan'), mean(FLs(:,id1:id2), 'omitnan'),2);
 p = fmincon(@(p) fitp(p, mean(KAs(:,id1:id2), 'omitnan'), mean(FLs(:,id1:id2), 'omitnan')), p0, [1 0 0; 0 1 0], [0 -2]);
 
 hold on
+
+
+x = linspace(0,1.5, 100);
 
 plot(x, polyval(p, x), 'k--')
 
@@ -171,7 +174,6 @@ for ii = 1:length(angs)
     xline(angs(ii),'k--')
 end
 
-x = linspace(0,1.5, 100);
 %             y = -3 * x + 1.2 * 3;
 
 r1 = -2;
@@ -194,7 +196,7 @@ end
 % save('gravity.mat', 'As', 'Bs')
 
 % end
-
+end
 
 %%
 function[cost] = fitp(p, x, y)

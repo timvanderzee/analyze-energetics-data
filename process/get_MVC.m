@@ -85,6 +85,8 @@ for P = Ps
 
         if k == 1 && P == 3
             EMGe(t>60,1) = nan;
+        elseif k == 2 && P == 22
+            EMGe(t>6.5,1) = nan;
         end
         
         if visualize
