@@ -21,7 +21,7 @@ labs = [labs, {'Angle', 'Velocity','Torque', 'Length'}];
 units = [units, {' (deg)', ' (deg/s)', ' (N-m)', ' (mm)'}];
 
 ymins = [ymins, 0 -300 -50 50];
-ymaxs = [ymaxs, 70 300 100 150];
+ymaxs = [ymaxs, 70 300 100 200];
 
 
 % pre-allocate
@@ -66,7 +66,7 @@ for P = Ps
             
             Data = [data(trial).EMG data(trial).Angle data(trial).Velocity data(trial).Torque];
             
-            if isfield(data, 'Faslen')
+            if isfield(data, 'Faslen') && ~isempty(data(trial).Faslen)
                 Data(:,end+1) = data(trial).Faslen;
             end
             

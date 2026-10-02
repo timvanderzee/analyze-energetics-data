@@ -33,7 +33,7 @@ color = lines(3);
 subplot(131)
 errorbar(v, mean(Y(:,:,j),2, 'omitnan'), std(Y(:,:,j),1,2, 'omitnan'), '--o', 'color', color(type,:), ...
     'markerfacecolor', color(type,:)); hold on
-plot(v, Y(:,:,j), '.', 'color', color(type,:))
+plot(v, Y(:,:,j), '.-')
 
 xlabel('Velocity (deg/s)')
 ylabel('Efficiency (%)')
@@ -65,7 +65,7 @@ subplot(132)
 errorbar(v, mean(rat,2,'omitnan'), std(rat,1,2,'omitnan'), '--o', 'color', color(type,:), ...
         'markerfacecolor', color(type,:)); hold on
 
-plot(v, rat, '.', 'color', color(type,:))
+plot(v, rat, '.-')
 ylabel('Efficiency ratio')
 xlabel('Velocity (deg/s)')
 ylim([0 5])
@@ -86,7 +86,9 @@ subplot(133)
 errorbar(-mean(vm,2, 'omitnan'), mean(eff(:,:,1),2, 'omitnan'),std(eff(:,:,1),1,2, 'omitnan'), std(eff(:,:,1),1,2, 'omitnan'), ...
     std(vm,1,2, 'omitnan'), std(vm,1,2, 'omitnan'), ...
     'o', 'color', color(type,:), 'markerfacecolor', color(type,:)); hold on
-plot(-vm, eff(:,:,1), '.', 'color', color(type,:))
+
+[~, sid] = sort(vm(:,1));
+plot(-vm(sid,:), eff(sid,:,1), '.-')
 
 xlabel('Velocity (mm/s)')
 

@@ -23,7 +23,7 @@ mcolors = lines(2);
 mcolor = mcolors(1,:);
 
 % Ps = 1;
-ymaxs = [50    50    50    50    50    50    50    50    50    50    50    70   300 100 150];
+ymaxs = [50    50    50    50    50    50    50    50    50    50    50    70   300 100 200];
 
 cd('C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset')
 load('cycle_data.mat', 'tlin', 'Data_active', 'labs', 'units','ymins', 'Tcycle')
@@ -38,6 +38,14 @@ Data_active(:,:,11,8) = nan; % SM quality bad
 %% replace zeros with NaNs for subjects missing ultrasound
 Faslen = Data_active(:,:,:,15);
 Faslen(Faslen == 0) = nan;
+
+% remove individual offset
+mFaslen = squeeze(mean(mean(Faslen,1, 'omitnan'),2, 'omitnan'));
+
+for i = 1:size(Faslen,3)
+    Faslen(:,:,i) = Faslen(:,:,i) - mFaslen(i) + mean(mFaslen, 'omitnan');
+end
+
 Data_active(:,:,:,15) = Faslen;
 
 %% correct torque wrt max
@@ -58,7 +66,7 @@ end
 
 %% optional: simplify
 temp(:,:,:,1) = mean(Data_active(:,:,:,1:3), 4, 'omitnan'); % agonist
-temp(:,:,:,2) = mean(Data_active(:,:,:,4:11), 4, 'omitnan'); % antagonist
+temp(:,:,:,2) = mean(Data_active(:,:,:,7:9), 4, 'omitnan'); % antagonist
 temp(:,:,:,3:6) = Data_active(:,:,:,12:15);
 
 Data_active = temp;
@@ -117,6 +125,7 @@ ymaxs(end+1) = 200;
 
 %% force
 r = (2 + .831 * Data_active(:,:,:,aid) * pi/180) / 100;
+r = .03;
 
 Data_active(:,:,:,Fid) = Data_active(:,:,:,Tid) ./  r / 1000;
 labs{end+1} = 'Force';
@@ -419,22 +428,6 @@ for k = 1:length(conds)
     end
 end
 
-%%
-if ishandle(100), close(100); end
-figure(100)
-
-for P = Ps
-    nexttile
-%     bar(reordercats(categorical(conds), conds), squeeze(W(:,P,:)))
-    box off
-    title(num2str(P))
-end
-
-%%
-if ishandle(101), close(101); end
-figure(101)
-
-% bar(reordercats(categorical(conds), conds), mean(A,2,'omitnan'))
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')

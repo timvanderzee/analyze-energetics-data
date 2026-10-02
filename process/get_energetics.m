@@ -7,10 +7,20 @@ colors = lines(8);
 
 if Ps < 16
     conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
+else
+    conds = {'c30', 'c60','c120','c240', 'e30', 'e60','e120','e240'};
 end
 
 for i = 1:30
-    Sdata(i).tstop = 10:10:90;
+    
+%     Sdata(i).tstop = 10:10:90;
+
+    if i < 16
+        Sdata(i).tstop = 11:10:91; % new default?
+    else
+        Sdata(i).tstop = 11:10:81; % new default?
+    end
+
 end
 
 % exceptions
@@ -19,13 +29,20 @@ Sdata(2).tstop = [10 26:10:96];
 Sdata(3).tstop = [11 25:10:95];
 Sdata(4).tstop = (11:10:91);
 Sdata(5).tstop = [(11:10:81), 92];
+% 6 unclear to me
+% 7 seems default
 Sdata(8).tstop = [10, 30, 43:10:103]; % made up, need to verify
-
-Sdata(16).tstop = 10:10:80;
+Sdata(8).tstop = [11, 31, 43:10:103]; % verified
+% 10-16 seems default
+% Sdata(16).tstop = 10:10:80; % wrong?
+% 17 default
+% 18-21 missing
 
 % new file
-Sdata(20).tstop(end-2:end) = [69 79 90];
-Sdata(21).tstop = 11:10:91;
+Sdata(20).tstop(end-1:end) = [69 79]; % from merging files
+% Sdata(21).tstop = 11:10:91;
+% 22 default
+Sdata(23).tstop = [11:10:51 63:10:83]; % checked
 
 % order (relevant for energetics)
 Sdata(1).order = [8 2 9 5 6 4 1 7 3];
@@ -44,12 +61,13 @@ Sdata(13).order = [5 8 3 9 2 7 6 1 4];
 Sdata(14).order = [9 2 1 6 8 3 7 4 5];
 Sdata(15).order = [7 4 9 5 1 3 2 6 8];
 Sdata(16).order = [8 3 6 7 5 1 2 4 9];
-Sdata(17).order = [ 6     1     5     3     7     2     8     4];
-Sdata(18).order = [ 8     6     4     5     1     7     3     2];
+Sdata(17).order = [6     1     5     3     7     2     8     4];
+Sdata(18).order = [8     6     4     5     1     7     3     2];
 Sdata(19).order = [7     6     3     8     5     4     1     2];
-Sdata(20).order = [ 4     6     2     7     3     8     5     1];
-Sdata(21).order = [ 4     5     8     6     3     7     1     2];
+Sdata(20).order = [4     6     2     7     3     8     5     1];
+Sdata(21).order = [4     5     8     6     3     7     1     2];
 Sdata(22).order = [3     7     1     4     2     8     6     5];
+Sdata(23).order = [8     2     3     1     6     5     4     7];
 
 % pre-allocate
 N = 9;

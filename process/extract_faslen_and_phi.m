@@ -15,7 +15,7 @@ for P = Ps
     if isfolder(ultrasound_folder)
         cd(ultrasound_folder)
         
-        files = dir('*.mat');
+        files = dir('*tracked.mat');
         
         for i = 1:length(files)
             

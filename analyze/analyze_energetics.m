@@ -1,10 +1,14 @@
-function[eff, vels] = analyze_energetics(Ps, v, Pi, cor, i)
+function[eff, vels] = analyze_energetics(Ps, v, Pi, cor, i, type)
 
-if nargin < 5
+if nargin < 6
+    type = 'joint-based';
+end
+
+if nargin < 5 || isempty(i)
     i = 1;
 end
 
-if nargin < 4
+if nargin < 4 || isempty(cor)
     cor = 0;
 end
 
@@ -20,7 +24,10 @@ Pmet = Pmet(Ps,1:length(conds));
 Act = A(1:length(conds),Ps,1);
 
 %% compute efficiency
-% W = Wm;
+if strcmp(type, 'muscle-based')
+    W = Wm;
+end
+
 Pav = W(1:length(conds),Ps,:) ./ mTcycle(1:length(conds));
 eff         = Pav./Pmet' * 100;
 
@@ -77,7 +84,7 @@ titles = {'Activation', 'Metabolic rate', 'Mechanical work rate', 'Efficiency'};
 for k = 1:size(Y,3)
     subplot(2,2,k)
     bar(x, mean(Y(:,:,k), 2, 'omitnan'),'facecolor', colors(1,:)); hold on
-    errorbar(x, mean(Y(:,:,k),2, 'omitnan'), std(Act,1,2, 'omitnan'), '.', 'color', colors(1,:)); hold on
+    errorbar(x, mean(Y(:,:,k),2, 'omitnan'), std(Y(:,:,k),1,2, 'omitnan'), '.', 'color', colors(1,:)); hold on
 
     box off
     xticklabels(conds(id))

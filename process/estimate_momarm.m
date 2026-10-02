@@ -9,7 +9,7 @@ datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
 conds = {'_nulhoek', '_ROM'};
 
-colors = lines(20);
+colors = lines(25);
 
 FLm = nan(15, 13, 2);
 KAm = nan(15, 13, 2);
@@ -61,7 +61,7 @@ for P = Ps
                 cd(ultrasound_folder)
                 filename = ['p', num2str(P), conds{j}, '.mat'];
                 
-                
+                if exist(filename, 'file')
                 load(filename, 'Time', 'FL');
                 
                 Faslen = interp1(Time, FL, t) / 10; % mm -> cm
@@ -115,7 +115,7 @@ for P = Ps
                 end
                 
                 plot(KAm(P,:,j), FLm(P,:,j), 'o', 'color', colors(P,:));
-            
+                end
                 
                 
                 %             plot(x,y,'k--')
