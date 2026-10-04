@@ -1,4 +1,4 @@
-function[eff, vels] = analyze_energetics(Ps, v, Pi, cor, i, type)
+function[Y, vels] = analyze_energetics(Ps, v, Pi, cor, i, type)
 
 if nargin < 6
     type = 'joint-based';
@@ -14,11 +14,12 @@ end
 
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
 load(['mechanics_v', num2str(v), '.mat'], 'W', 'conds', 'Ts', 'Tl', 'mTcycle', 'Iact', 'A', 'Wm', 'vm')
-load('metabolics.mat', 'Pmet')
+load('metabolics.mat', 'Pmet', 'Pmet_alt')
 
 vels = vm(Ps,:)';
 
 Pmet = Pmet(Ps,1:length(conds));
+Pmet = Pmet_alt(Ps,1:length(conds));
 % conds = {'c60','c120','c240', 'e60','e120','e240', 'ISOM_EXT', 'ISOM_FLEX', 'STR-SHOR'};
 
 Act = A(1:length(conds),Ps,1);
@@ -54,7 +55,7 @@ if v == 1 && cor
     Pmcor(:,:,2) = W(1:length(Tl),Ps,2) ./ Ts'; % positive
     Pmcor(:,:,3) = W(1:length(Tl),Ps,3) ./ Tl'; % negative
     
-%     Pmet(Pmet<5) = nan;
+    Pmet(Pmet<5) = nan;
     eff     = Pav./ Pmet' * 100;
 end
 

@@ -1,4 +1,4 @@
-function[rat] = make_efficiency_figures(vm, eff, type, j)
+function[rat] = make_efficiency_figures(vm, eff, type, j, Ps, Pi)
 
 if nargin < 4
     j = 1;
@@ -28,12 +28,21 @@ end
 % i = 1;
 kk = type;
 
-color = lines(3);
+color = lines(10);
 
 subplot(131)
 errorbar(v, mean(Y(:,:,j),2, 'omitnan'), std(Y(:,:,j),1,2, 'omitnan'), '--o', 'color', color(type,:), ...
     'markerfacecolor', color(type,:)); hold on
-plot(v, Y(:,:,j), '.-')
+
+for i = 1:size(Y,2)
+    if Ps(i) == Pi
+        lw = 2;
+    else
+        lw = 0.5;
+    end
+    
+        plot(v, Y(:,i,j), '.-', 'color', color(i,:), 'linewidth', lw)
+end
 
 xlabel('Velocity (deg/s)')
 ylabel('Efficiency (%)')
@@ -57,7 +66,7 @@ iecc = v < 0;
 
 Ycon = Y(icon,:,1);
 Yecc = flip(Y(iecc,:,1));
-rat = [ones(1,size(Yecc,2)); -Yecc./Ycon];
+rat = [ones(1,size(Yecc,2)); Yecc./Ycon];
 
 v = [0 v(icon)];
 
@@ -65,7 +74,16 @@ subplot(132)
 errorbar(v, mean(rat,2,'omitnan'), std(rat,1,2,'omitnan'), '--o', 'color', color(type,:), ...
         'markerfacecolor', color(type,:)); hold on
 
-plot(v, rat, '.-')
+for i = 1:size(Y,2)
+    if Ps(i) == Pi
+        lw = 2;
+    else
+        lw = 0.5;
+    end
+    
+    plot(v, rat(:,i), '.-', 'color', color(i,:), 'linewidth', lw)
+end
+    
 ylabel('Efficiency ratio')
 xlabel('Velocity (deg/s)')
 ylim([0 5])
@@ -80,15 +98,25 @@ for i = 1:(size(rat,1)-1)
 end
 
 %% efficiency versus velocity
-color = lines(2);
+% color = lines(2);
 
 subplot(133)
 errorbar(-mean(vm,2, 'omitnan'), mean(eff(:,:,1),2, 'omitnan'),std(eff(:,:,1),1,2, 'omitnan'), std(eff(:,:,1),1,2, 'omitnan'), ...
     std(vm,1,2, 'omitnan'), std(vm,1,2, 'omitnan'), ...
     'o', 'color', color(type,:), 'markerfacecolor', color(type,:)); hold on
 
-[~, sid] = sort(vm(:,1));
-plot(-vm(sid,:), eff(sid,:,1), '.-')
+isf = find(isfinite(vm(1,:)),1);
+[~, sid] = sort(vm(:,isf));
+
+for i = 1:size(Y,2)
+    if Ps(i) == Pi
+        lw = 2;
+    else
+        lw = 0.5;
+    end
+    plot(-vm(sid,i), eff(sid,i,1), '.-', 'color', color(i,:), 'linewidth', lw)
+end
+
 
 xlabel('Velocity (mm/s)')
 

@@ -35,12 +35,9 @@ Sdata(8).tstop = [10, 30, 43:10:103]; % made up, need to verify
 Sdata(8).tstop = [11, 31, 43:10:103]; % verified
 % 10-16 seems default
 % Sdata(16).tstop = 10:10:80; % wrong?
-% 17 default
-% 18-21 missing
-
-% new file
+% 17-19 default
 Sdata(20).tstop(end-1:end) = [69 79]; % from merging files
-% Sdata(21).tstop = 11:10:91;
+Sdata(21).tstop = 12:10:82; % based on excel
 % 22 default
 Sdata(23).tstop = [11:10:51 63:10:83]; % checked
 
@@ -73,13 +70,12 @@ Sdata(23).order = [8     2     3     1     6     5     4     7];
 N = 9;
 M = max(Ps);
 
-
-Pmetn   = nan(M,N);
+Pmetn   = nan(M,N,2);
 VO2_rest = nan(M,1);
 RQ_rest = nan(M,1);
 
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-load('metabolics.mat', 'Pmet')
+load('metabolics.mat', 'Pmet', 'Pmet_alt')
 
 for P = Ps
 
@@ -131,27 +127,34 @@ for P = Ps
     [VO2_rest(P), mid] = min(VO2a3);
 %     [VO2_rest(P)] = mean(VO2i(tint<5), 'omitnan');
     
-    VO2n = VO2a - VO2_rest(P);
     RQ_rest(P) = RQa3(mid);
+    
+    % baseline subtracted
+    VO2n_raw = VO2i - VO2_rest(P); % raw
+    VO2n_smooth = VO2a - VO2_rest(P); % smooth
+    
     
     figure(P)
     nexttile
     plot(tr, VO2r - VO2_rest(P), 'color', [.8 .8 .8]); hold on
-    plot(tint, VO2n,'-', 'color', colors(2,:), 'linewidth', 2)
+    plot(tint, VO2n_smooth,'-', 'color', colors(2,:), 'linewidth', 2)
     title('VO2')
-    
-    
     
     yline(0,'k--')
     
     tstop = Sdata(P).tstop;
-    VO2m = nan(1, length(tstop));
+    VO2m = nan(2, length(tstop));
     for i = 1:length(tstop)
         xline(tstop(i), 'k--')
         text(tstop(i), 1200, conds{Sdata(P).order(i)}, 'fontsize', 8, 'HorizontalAlignment', 'center')
         
-        VO2m(i) = interp1(tint, VO2n, tstop(i));
-        plot(tstop(i), VO2m(i), 'ko')
+        VO2m(1,i) = interp1(tint, VO2n_smooth, tstop(i));
+        plot(tstop(i), VO2m(1,i), 'ko')
+        
+        % integral method
+        id = tint > (tstop(i)-5) & tint < (tstop(i) + 5);
+        VO2m(2,i) = trapz(tint(id), VO2n_raw(id)) / 5;
+        
     end
     
     nexttile
@@ -164,8 +167,12 @@ for P = Ps
     RQm = nan(1, length(tstop));
     for i = 1:length(tstop)
         xline(tstop(i), 'k--')
-        RQm(i) = interp1(tint, RQa, tstop(i));
-        plot(tstop(i), RQm(i), 'ko')
+        RQm(1,i) = interp1(tint, RQa, tstop(i));
+        plot(tstop(i), RQm(1,i), 'ko')
+        
+        % integral method
+        id = tint > (tstop(i)-5) & tint < (tstop(i) + 5);
+        RQm(2,i) = trapz(tint(id), RQi(id)) / 10;
     end
     
     % calc metabolic energy expenditure according to Brockway
@@ -173,45 +180,52 @@ for P = Ps
     joule_per_o2_data = [19.8071 21.0956] * 1e3;
     joule_per_o2 = polyval(polyfit(RQdata, joule_per_o2_data, 1), RQm); % Joule per L
     
-    % calculate net metabolic rate
-    Pmetn(P,1:length(VO2m)) = (VO2m /1000 / 60) .* joule_per_o2; % W
+        % calculate net metabolic rate
+        for i = 1:2 
+            Pmetn(P,1:length(VO2m),i) = (VO2m(i,:) /1000 / 60) .* joule_per_o2(i,:); % W
+        end
     end 
 end
 
 %% summary graphs
 if ishandle(300), close(300); end
 
-vels = [60 120 240 -60 -120 -240 -5 5 0];
+% vels = [60 120 240 -60 -120 -240 -5 5 0];
 % Pmet = nan(max(Ps), 9);
+
+% Pmet_alt = Pmet;
+
 for P = Ps
     order = Sdata(P).order;
 
     for i = 1:length(order)
         id = find(order == i);
     
-        Pmet(P,i) = Pmetn(P, id);
+        Pmet(P,i) = Pmetn(P, id,1);
+        Pmet_alt(P,i) = Pmetn(P, id,2);
     end
 end
 
 
-N = length(order);
+% N = length(order);
+% Sm = mean(Pmet,2);
+% Pmetc = Pmet - Sm + mean(Sm, 'omitnan');
 
-Sm = mean(Pmet,2);
+figure(300)
+for P = Ps
+    nexttile
+    bar(1:9, Pmet(P,:)); hold on
+    plot(1:9, Pmet_alt(P,:), 'linewidth', 2)
+end
 
-Pmetc = Pmet - Sm + mean(Sm, 'omitnan');
-
-figure(300)   
-nexttile
-errorbar(1:9, mean(Pmet, 'omitnan'), std(Pmet, 'omitnan')); hold on
-
+xticklabels(conds)
 
 % xticklabels(conds);
 ylabel('Metabolic rate (W)')
 box off
-
 xlabel('Angular velocity condition (deg/s)') 
 
 
 %% save
 cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-save('metabolics.mat', 'Pmet', 'Sdata')
+save('metabolics.mat', 'Pmet', 'Sdata', 'Pmet_alt')

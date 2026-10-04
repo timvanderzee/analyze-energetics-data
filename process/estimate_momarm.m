@@ -7,12 +7,14 @@ datafolder = 'C:\Users\u0167448\OneDrive - KU Leuven\10. Energetics\dataset';
 
 % Ps = 16;
 
-conds = {'_nulhoek', '_ROM'};
+% conds = {'_nulhoek', '_ROM'};
+conds = {'_ROM'};
 
 colors = lines(25);
 
-FLm = nan(15, 13, 2);
-KAm = nan(15, 13, 2);
+% FLm = nan(15, 13, 2);
+% KAm = nan(15, 13, 2);
+Bs = nan(23,2);
 
 for P = Ps
     disp(P)
@@ -78,12 +80,12 @@ for P = Ps
                 %             end
                 
                 isf = isfinite(Faslen);
-                %             p0 = polyfit(Kangle(id(:)&isf(:)) * pi/180, Faslen(id(:)&isf(:)), 2);
-                
-                %             p = fmincon(@(p) fitp(p, Kangle(id(:)&isf(:)) * pi/180,  Faslen(id(:)&isf(:))), p0, [1 0 0; 0 1 0], [0 -2]);
-                
-                %             pd = polyder(p);
-                
+                p0 = polyfit(Kangle(id(:)&isf(:)) * pi/180, Faslen(id(:)&isf(:)), 2);
+
+                p = fmincon(@(p) fitp(p, Kangle(id(:)&isf(:)) * pi/180,  Faslen(id(:)&isf(:))), p0, [1 0 0; 0 1 0], [0 -.5]);
+
+                pd = polyder(p);
+
                 
                 
                 figure(1)
@@ -97,33 +99,33 @@ for P = Ps
                 
                 subplot(223)
                 plot(Kangle(id) * pi/180, Faslen(id), '.', 'color', colors(P,:)); hold on
-                %             plot((0:80)* pi/180, polyval(p, (0:80)* pi/180));
+                plot((0:80)* pi/180, polyval(p, (0:80)* pi/180), 'color', colors(P,:));
                 
                 
-                if j == 2
-                    angs = .19 + (0:5:60) * pi/180;
-                else
-                    angs = mean(Kangle, 'omitnan') * pi/180;
-                end
+%                 if j == 2
+%                     angs = .19 + (0:5:60) * pi/180;
+%                 else
+%                     angs = mean(Kangle, 'omitnan') * pi/180;
+%                 end
+%                 
+%                 Kangle_rad = Kangle * pi/180;
                 
-                Kangle_rad = Kangle * pi/180;
-                
-                for jj = 1:length(angs)
-                    
-                    FLm(P, jj, j) = mean(Faslen(id & Kangle_rad > (angs(jj) - .03) & Kangle_rad < (angs(jj) + .03)), 'omitnan');
-                    KAm(P, jj, j) = mean(Kangle_rad(id & Kangle_rad > (angs(jj) - .03) & Kangle_rad < (angs(jj) + .03)), 'omitnan');
-                end
-                
-                plot(KAm(P,:,j), FLm(P,:,j), 'o', 'color', colors(P,:));
+%                 for jj = 1:length(angs)
+%                     
+%                     FLm(P, jj, j) = mean(Faslen(id & Kangle_rad > (angs(jj) - .03) & Kangle_rad < (angs(jj) + .03)), 'omitnan');
+%                     KAm(P, jj, j) = mean(Kangle_rad(id & Kangle_rad > (angs(jj) - .03) & Kangle_rad < (angs(jj) + .03)), 'omitnan');
+%                 end
+%                 
+%                 plot(KAm(P,:,j), FLm(P,:,j), 'o', 'color', colors(P,:));
                 end
                 
                 
                 %             plot(x,y,'k--')
                 
-%                 subplot(224)
-                %             plot((0:80)* pi/180, polyval(pd, (0:80)* pi/180));
+                subplot(224)
+                plot((0:80)* pi/180, polyval(pd, (0:80)* pi/180), 'displayname', num2str(P), 'color', colors(P,:)); hold on
                 
-                %             Bs(P,:) = pd;
+                Bs(P,:) = pd;
                 
                 
             end
@@ -131,6 +133,11 @@ for P = Ps
         end
     end
 end
+
+legend('location', 'best')
+%% save
+cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
+save('momarm.mat', 'Bs')
 
 return
 %% combine
@@ -191,9 +198,7 @@ plot(x, R)
 for ii = 1:length(angs)
     xline(angs(ii),'k--')
 end
-%% save
-% cd('C:\Users\u0167448\Documents\GitHub\analyze-energetics-data\data')
-% save('gravity.mat', 'As', 'Bs')
+
 
 % end
 end

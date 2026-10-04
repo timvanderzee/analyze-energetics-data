@@ -81,10 +81,10 @@ wid = 4; % angular velocity
 Tid = 5;
 Lid = 6;
 Pid = 7;
-% rid = 8; % moment arm
-vid = 8; % muscle velocity
-Fid = 9; % force
-Mid = 10; % muscle power
+rid = 8; % moment arm
+vid = 9; % muscle velocity
+Fid = 10; % force
+Mid = 11; % muscle power
 
 %% calculate power
 Data_active(:,:,:,Pid) = Data_active(:,:,:,Tid) .* Data_active(:,:,:,wid) * pi/180;
@@ -95,17 +95,17 @@ ymins(end+1) = -400;
 ymaxs(end+1) = 200;
 
 %% calculate moment arm
-% load('gravity.mat', 'Bs');
+load('momarm.mat', 'Bs');
 % Bs(Bs==0) = nan;
 % 
-% for P = Ps
-%     Data_active(:,:,P,rid) =  -polyval(Bs(P,:), Data_active(:,:,P,aid) * pi/180);
-% end
-% 
-% labs{end+1} = 'Moment arm';
-% units{end+1} = ' (cm)';
-% ymins(end+1) = 0;
-% ymaxs(end+1) = 5;
+for P = Ps
+    Data_active(:,:,P,rid) =  -polyval(Bs(P,:), Data_active(:,:,P,aid) * pi/180);
+end
+
+labs{end+1} = 'Moment arm';
+units{end+1} = ' (cm)';
+ymins(end+1) = 0;
+ymaxs(end+1) = 5;
 
 %% calculate force and muscle power
 % r = (Data_active(:,:,:,rid)/100);
@@ -128,6 +128,8 @@ r = (2 + .831 * Data_active(:,:,:,aid) * pi/180) / 100;
 r = .03;
 
 Data_active(:,:,:,Fid) = Data_active(:,:,:,Tid) ./  r / 1000;
+Data_active(:,:,:,Fid) = Data_active(:,:,:,Tid) ./  (Data_active(:,:,:,rid) / 100) / 1000;
+
 labs{end+1} = 'Force';
 units{end+1} = ' (kN)';
 ymins(end+1) = 0;
