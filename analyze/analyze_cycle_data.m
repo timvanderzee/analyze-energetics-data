@@ -1,4 +1,4 @@
-function[] = analyze_cycle_data(Ps, type, Pi)
+function[] = analyze_cycle_data(Ps, type, Pi, plot_type)
 % type = 2;
 
 % profile on
@@ -195,7 +195,75 @@ for k = 1:length(conds) % conditions
     end
 end
 
-%% plot!
+%% plot option 1: typical example
+
+if plot_type == 1
+
+ids = [1:2, 4:6];
+colors = lines(2);
+ls = {'-', '-.'};
+
+ks = [1:4; 5:8];
+
+labs{1} = 'Activation';
+
+ymins(1:2) = [-2 -2];
+% ymaxs(3) = 80;
+ymaxs(5) = 150;
+ymaxs(6) = 150;
+
+
+for i = 1:length(ids)
+    for k = 1:size(ks,2)
+
+        nexttile
+        %         subplot(length(ids),size(ks,2),i)
+        
+        for jj = 1:2
+            if jj == 1
+                h = patch(tlins(k,[tcon(k,:) flip(tcon(k,:))]), 10*[-100 -100 100 100], [.7 .7 .7], 'linestyle', 'none'); hold on
+                patch(tlins(k,[tecc(k,:) flip(tecc(k,:))]), 10*[-100 -100 100 100], [.3 .3 .3], 'linestyle', 'none'); hold on
+            end
+            
+            j = ids(i);
+            
+
+            gcolor =  colors(jj,:)+.2;
+            gcolor(gcolor>1) = 1;
+            
+            patch([tlins(ks(jj,k),:) flip(tlins(ks(jj,k),:))]', [mean(Data_active(:,ks(jj,k),Ps,j), 3, 'omitnan') + std(Data_active(:,ks(jj,k),Ps,j), 1, 3, 'omitnan'); ...
+            flip(mean(Data_active(:,ks(jj,k),Ps,j), 3, 'omitnan')-std(Data_active(:,ks(jj,k),Ps,j), 1, 3, 'omitnan'))], colors(jj,:), 'FaceAlpha', .3, 'linestyle', 'none'); hold on
+
+            plot(tlins(ks(jj,k),:), mean(Data_active(:,ks(jj,k),Ps,j), 3, 'omitnan'), '-','color', colors(jj,:), 'linewidth', 1.5); hold on
+
+            plot(tlin, Data_active(:,ks(jj,k), Pi, j), '-', 'linewidth', 1, 'color', [1 1 1]); hold on
+            plot(tlin, Data_active(:,ks(jj,k), Pi, j), '-.', 'linewidth', 1, 'color', gcolor); hold on
+            
+            if k == 1
+            
+                ylabel([labs{j}, units{j}])
+            end
+            
+            if j == ids(1)
+                title([num2str(vels(k)), ' deg/s'])
+            elseif j == ids(end)
+                xlabel('Time (s)')
+            end
+            
+            ylim([ymins(j) ymaxs(j)])
+            xlim([0 Tcycle(ks(jj,k),Pi)])
+            
+            box off
+            grid on
+        end
+    end
+    
+end
+set(gcf, 'units', 'normalized', 'position', [.1 .1 .3 .7])
+
+else
+%% plot option 2: all participants
+
 for k = 1:length(conds) % conditions
     figure(k)
     set(gcf, 'Name', conds{k});
@@ -237,6 +305,7 @@ for k = 1:length(conds) % conditions
         xlim([0 mTcycle(k)])
         
     end
+end
 end
 
 % profile viewer

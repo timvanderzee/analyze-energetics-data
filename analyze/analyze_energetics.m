@@ -1,4 +1,4 @@
-function[Y, vels] = analyze_energetics(Ps, v, Pi, cor, i, type)
+function[X, vels] = analyze_energetics(Ps, v, Pi, cor, i, type)
 
 if nargin < 6
     type = 'joint-based';
@@ -64,7 +64,7 @@ end
 acolors = parula(length(Ps));
 colors = lines(5);
 names = {'Net','Positive', 'Negative'};
-ylabs = {'Activation', 'Metabolic rate (W)', 'Work rate (W)', 'Efficiency (%)'};
+ylabs = {'Activation (%)', 'Net metabolic rate (W)', 'Net joint power (W)', 'Efficiency (%)'};
 
 if v == 1
     x = [1:3 -1:-1:-3 5:7];
@@ -73,40 +73,80 @@ else
 end
 
 
-[~, id] = sort(x);
+% [~, id] = sort(x);
 
-Y(:,:,1) = Act;
-Y(:,:,2) = Pmet';
-Y(:,:,3) = Pav(:,:,i);
-Y(:,:,4) = eff(:,:,i);
+X(:,:,1) = Act;
+X(:,:,2) = Pmet';
+X(:,:,3) = Pav(:,:,i);
+X(:,:,4) = eff(:,:,i);
 
-titles = {'Activation', 'Metabolic rate', 'Mechanical work rate', 'Efficiency'};
+titles = {'Quadriceps activation', 'Metabolic energy cost', 'Mechanical work', 'Mechanical efficiency'};
 
-for k = 1:size(Y,3)
-    subplot(2,2,k)
-    bar(x, mean(Y(:,:,k), 2, 'omitnan'),'facecolor', colors(1,:)); hold on
-    errorbar(x, mean(Y(:,:,k),2, 'omitnan'), std(Y(:,:,k),1,2, 'omitnan'), '.', 'color', colors(1,:)); hold on
+avels = [30 60 120 240];
 
-    box off
-    xticklabels(conds(id))
-    ylabel(ylabs{k})
-    title(titles{k})
-    
-    for j = 1:size(Pmet,1)
-        if Ps(j) == Pi
-            lw = 2;
-        else
-            lw = .5;
-        end
-    
-        plot(x(id), squeeze(Y(id,j,k)), '.:', 'color', acolors(j,:), 'DisplayName',num2str(Ps(j)), 'linewidth', lw)
+sgns = [1 -1];
+aps = [0 .95];
 
+for jj = 1:2
+
+    if jj == 1
+        Y = X(1:4,:,:);
+    else
+        Y = X(5:8,:,:);
     end
     
+    for k = 1:size(Y,3)
+
+        subplot(1,4,k)
+        
+        if k > 2 && jj == 2
+            imax = 2;
+        else
+            imax = 1;
+        end
+        
+        for ii = 1:imax     
+            bar((1:4) -.2 + (jj-1)*.4, sgns(ii)*mean(Y(:,:,k), 2, 'omitnan'),'facecolor', brighten(colors(jj,:),aps(ii)), 'BarWidth', .35, 'EdgeColor', 'none'); hold on
+            errorbar((1:4) -.2 + (jj-1)*.4, sgns(ii)*mean(Y(:,:,k),2, 'omitnan'), std(Y(:,:,k),1,2, 'omitnan'), '.', 'color', brighten(colors(jj,:),aps(ii))); hold on
+        end
+
+            
+        box off
+        xticks(1:4)
+        xticklabels(avels)
+        ylabel(ylabs{k})
+        title(titles{k})
+        xlabel('Joint velocity (deg/s)')
+        
+        xlim([.5 4.5])
+%         ylims(
+    end
+end
+
+for k = 1:4
+    for kk = 1:4
+           subplot(1,4,k)
+        for j = 1:size(Pmet,1)
+            if Ps(j) == Pi
+                lw = 2;
+            else
+                lw = .5;
+            end
+
+            if k > 2
+                sig = -1;
+            else
+                sig = 1;
+            end
+                
+            plot(kk + [-.2 .2], [X(kk,j,k) sig*X(kk+4,j,k)], '.--','color', .7*[1 1 1], 'linewidth', lw)
+
+        end
+    end
 end
 
 
-legend('location', 'best')
+% legend('location', 'best')
 
 
 end

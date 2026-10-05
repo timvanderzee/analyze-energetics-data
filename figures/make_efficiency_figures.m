@@ -31,18 +31,27 @@ kk = type;
 color = lines(10);
 
 subplot(131)
-errorbar(v, mean(Y(:,:,j),2, 'omitnan'), std(Y(:,:,j),1,2, 'omitnan'), '--o', 'color', color(type,:), ...
-    'markerfacecolor', color(type,:)); hold on
 
-for i = 1:size(Y,2)
-    if Ps(i) == Pi
-        lw = 2;
-    else
-        lw = 0.5;
-    end
-    
-        plot(v, Y(:,i,j), '.-', 'color', color(i,:), 'linewidth', lw)
-end
+vels = [-30 -60 -120 -240 30 60 120 240];
+[~, id] = sort(vels);
+
+% figure(2)
+bar(vels, mean(vm,2)); hold on 
+errorbar(1:4, mean(vm,2), std(vm,1,2),'.'); hold on 
+plot(vels(id), vm(id,:), '-', 'color', [.5 .5 .5])
+
+% errorbar(v, mean(Y(:,:,j),2, 'omitnan'), std(Y(:,:,j),1,2, 'omitnan'), '--o', 'color', color(type,:), ...
+%     'markerfacecolor', color(type,:)); hold on
+% 
+% for i = 1:size(Y,2)
+%     if Ps(i) == Pi
+%         lw = 2;
+%     else
+%         lw = 0.5;
+%     end
+%     
+%         plot(v, Y(:,i,j), '.-', 'color', color(i,:), 'linewidth', lw)
+% end
 
 xlabel('Velocity (deg/s)')
 ylabel('Efficiency (%)')
